@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preparação do Ambiente</title>
+    <link rel="stylesheet" href="/static/css/etapa2.css">
+    <!-- Biblioteca de ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Menu Lateral -->
+        <nav class="sidebar">
+            <ul id="sidebar-steps">
+                <li data-step="1" class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
+                <li data-step="2" class="active"><span class="step-circle">2</span> Preparação</li>
+                <li data-step="3"><span class="step-circle">3</span> Assinatura</li>
+                <li data-step="4"><span class="step-circle">4</span> Proteção</li>
+                <li data-step="5"><span class="step-circle">5</span> Envio</li>
+                <li data-step="6"><span class="step-circle">6</span> Descriptografia</li>
+            </ul>
+        </nav>
+
+        <!-- Conteúdo Central -->
+        <main class="content">
+            <h1>Preparação do Ambiente</h1>
+
+            <!-- Importar Chave Pública -->
+            <div class="form-group">
+                <label for="public-key-upload">Importar Chave Pública do Professor:</label>
+                <input id="public-key-upload" type="file" accept=".pem">
+            </div>
+
+            <!-- Selecionar Arquivo -->
+            <div class="form-group">
+                <label for="file-upload">Selecionar Arquivo para Envio:</label>
+                <input id="file-upload" type="file">
+            </div>
+
+            <!-- Informações do Arquivo -->
+            <div id="file-info" class="file-info" style="display: none;">
+                <h3>Informações do Arquivo:</h3>
+                <p><strong>Nome:</strong> <span id="file-name"></span></p>
+                <p><strong>Tamanho:</strong> <span id="file-size"></span></p>
+                <p><strong>Hash SHA-256:</strong> <span id="file-hash"></span></p>
+            </div>
+
+            <!-- Botões de Navegação -->
+            <div class="buttons">
+                <button id="previous-button" class="btn secondary"><i class="fas fa-arrow-left"></i> Anterior</button>
+                <button id="next-button" class="btn primary" disabled>Próximo <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </main>
+    </div>
+    <script src="/static/js/etapa2.js"></script>
+</body>
+</html>
