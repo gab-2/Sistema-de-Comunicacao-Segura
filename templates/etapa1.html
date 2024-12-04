@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Comunicação Segura</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Biblioteca de ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul id="sidebar-steps">
+                <li data-step="1" class="active"><span class="step-circle">1</span> Geração de Chaves</li>
+                <li data-step="2"><span class="step-circle">2</span> Preparação</li>
+                <li data-step="3"><span class="step-circle">3</span> Assinatura</li>
+                <li data-step="4"><span class="step-circle">4</span> Proteção</li>
+                <li data-step="5"><span class="step-circle">5</span> Envio</li>
+                <li data-step="6"><span class="step-circle">6</span> Descriptografia</li>
+            </ul>
+        </nav>
+
+
+        <!-- Conteúdo Central -->
+        <main class="content">
+            <h1>Geração de Chaves</h1>
+
+            <!-- Botão RSA -->
+            <div class="buttons">
+                <button id="generate-rsa" class="btn primary">
+                    <i class="fas fa-key"></i> Gerar Par de Chaves RSA
+                </button>
+            </div>
+            <!-- Mensagem de Sucesso RSA -->
+            <div id="rsa-success" class="card success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Chaves RSA geradas com sucesso!
+            </div>
+            <!-- Saída RSA -->
+            <div id="rsa-output" style="display: none;">
+                <div class="key-container">
+                    <label for="public-key">Chave Pública:</label>
+                    <input id="public-key" type="text" readonly>
+                    <button class="download-btn" id="download-public">
+                        <i class="fas fa-download"></i> Baixar
+                    </button>
+                </div>
+                <div class="key-container">
+                    <label for="private-key">Chave Privada:</label>
+                    <input id="private-key" type="text" readonly>
+                    <button class="download-btn" id="download-private">
+                        <i class="fas fa-download"></i> Baixar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botão AES -->
+            <div class="buttons">
+                <button id="generate-aes" class="btn secondary">
+                    <i class="fas fa-lock"></i> Gerar Chave Simétrica AES
+                </button>
+            </div>
+            <!-- Mensagem de Sucesso AES -->
+            <div id="aes-success" class="card success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Chave AES gerada com sucesso!
+            </div>
+            <!-- Saída AES -->
+            <div id="aes-output" style="display: none;">
+                <div class="key-container">
+                    <label for="aes-key">Chave AES:</label>
+                    <input id="aes-key" type="text" readonly>
+                    <button class="download-btn" id="download-aes">
+                        <i class="fas fa-download"></i> Baixar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Divisor -->
+            <hr class="divider">
+
+            <!-- Botão Próximo -->
+            <button id="next-button" class="btn next" disabled>
+                Próximo →
+            </button>
+        </main>
+    </div>
+    <script src="/static/js/script.js"></script>
+</body>
+
+</html>
