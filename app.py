@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from cryptography_module.keys import generate_rsa_keys, generate_aes_key
-from cryptography_module.crypto import sign_file, encrypt_file
+from cryptography_module.crypto import sign_file, encrypt_file, protect_aes_key
 import os
 import hashlib
 
@@ -25,6 +25,11 @@ def etapa2():
 @app.route("/etapa3")
 def etapa3():
     return render_template("etapa3.html", current_step=3)
+
+
+@app.route("/etapa4")
+def etapa4():
+    return render_template("etapa4.html", current_step=4)
 
 
 @app.route("/generate_rsa", methods=["POST"])
@@ -125,6 +130,26 @@ def sign_and_encrypt():
         "message": "File signed and encrypted successfully",
         "signed_file": f"/download/signed_{file.filename}",
         "encrypted_file": f"/download/encrypted_{file.filename}"
+    })
+
+
+@app.route("/protect_aes_key", methods=["POST"])
+def protect_aes_key_route():
+    public_key_path = os.path.join(UPLOAD_DIR, "public_key.pem")
+    aes_key_path = os.path.join(SAVE_DIR, "aes_key.key")
+    protected_aes_key_path = os.path.join(SAVE_DIR, "protected_aes_key.pem")
+
+    if not os.path.exists(public_key_path):
+        return jsonify({"error": "Public key not found"}), 400
+    if not os.path.exists(aes_key_path):
+        return jsonify({"error": "AES key not found"}), 400
+
+    # Protege a chave AES
+    protect_aes_key(aes_key_path, public_key_path, protected_aes_key_path)
+
+    return jsonify({
+        "message": "AES key protected successfully",
+        "protected_key_file": f"/download/protected_aes_key.pem"
     })
 
 

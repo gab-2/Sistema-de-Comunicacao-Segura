@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proteção da Chave Simétrica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/etapa4.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul id="sidebar-steps">
+                <li data-step="1" class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
+                <li data-step="2" class="completed"><span class="step-circle">2</span> Preparação</li>
+                <li data-step="3" class="completed"><span class="step-circle">3</span> Assinatura</li>
+                <li data-step="4" class="active"><span class="step-circle">4</span> Proteção</li>
+                <li data-step="5"><span class="step-circle">5</span> Envio</li>
+                <li data-step="6"><span class="step-circle">6</span> Descriptografia</li>
+            </ul>
+        </nav>
+
+        <!-- Conteúdo Central -->
+        <main class="content">
+            <h1>Proteção da Chave Simétrica</h1>
+            <p class="description">Nesta etapa, a chave simétrica AES é protegida usando a chave pública do destinatário, garantindo que apenas ele possa recuperá-la posteriormente.</p>
+
+            <!-- Etapas do Processo -->
+            <div class="process-steps">
+                <h2>Por que proteger a chave simétrica?</h2>
+                <ul>
+                    <li>A chave AES é usada para cifrar o arquivo principal</li>
+                    <li>Ela precisa ser compartilhada com o professor de forma segura</li>
+                    <li>A proteção é feita usando criptografia assimétrica RSA</li>
+                </ul>
+                <button id="protect-aes-key" class="btn primary">Proteger Chave Simétrica</button>
+            </div>
+
+            <!-- Comparação Visual (Opcional) -->
+            <div id="comparison-container" class="comparison-container" style="display: none;">
+                <h3>Comparação Visual:</h3>
+                <div class="comparison">
+                    <div class="key-size">
+                        <h4>Antes:</h4>
+                        <div class="key-box">128 bits</div>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                    <div class="key-size">
+                        <h4>Depois:</h4>
+                        <div class="key-box encrypted">2048 bits</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status de Conclusão -->
+            <div id="process-results" class="results" style="display: none;">
+                <div class="result-card">
+                    <i class="fas fa-key"></i>
+                    <h3>Chave AES</h3>
+                    <p>A chave AES foi protegida com sucesso!</p>
+                </div>
+            </div>
+
+            <!-- Explicação -->
+            <div class="info-box">
+                <h2><i class="fas fa-info-circle"></i> Como funciona?</h2>
+                <ul>
+                    <li>A chave AES é cifrada com a chave pública RSA do professor</li>
+                    <li>Apenas o professor, com sua chave privada, poderá descriptografá-la</li>
+                    <li>Este processo garante o compartilhamento seguro da chave</li>
+                </ul>
+            </div>
+
+            <!-- Mensagem de Sucesso -->
+            <div id="success-message" class="success-message" style="display: none;">
+                <i class="fas fa-check-circle"></i> Chave simétrica protegida com sucesso!
+            </div>
+
+            <!-- Botões de Navegação -->
+            <div class="navigation-buttons">
+                <button id="previous-button" class="btn secondary"><i class="fas fa-arrow-left"></i> Anterior</button>
+                <button id="next-button" class="btn primary" disabled>Próximo <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </main>
+    </div>
+    <script src="/static/js/etapa4.js"></script>
+</body>
+
+</html>
