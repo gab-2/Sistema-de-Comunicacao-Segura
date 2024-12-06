@@ -1,16 +1,16 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from cryptography_module.keys import generate_rsa_keys, generate_aes_key
+from cryptography_module.crypto import sign_file, encrypt_file
 import os
 import hashlib
 
 app = Flask(__name__)
 
-# Pasta para salvar os arquivos gerados
+# Pastas para salvar os arquivos gerados e enviados
 SAVE_DIR = "generated_files"
 UPLOAD_DIR = "uploaded_files"
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 
 @app.route("/")
 def index():
@@ -20,6 +20,11 @@ def index():
 @app.route("/etapa2")
 def etapa2():
     return render_template("etapa2.html", current_step=2)
+
+
+@app.route("/etapa3")
+def etapa3():
+    return render_template("etapa3.html", current_step=3)
 
 
 @app.route("/generate_rsa", methods=["POST"])
@@ -90,14 +95,42 @@ def upload_file():
         })
 
 
-@app.route("/download/<key_type>")
-def download_key(key_type):
-    file_map = {
-        "private_key": "private_key.pem",
-        "public_key": "public_key.pem",
-        "aes_key": "aes_key.key"
-    }
-    file_path = os.path.join(SAVE_DIR, file_map.get(key_type, ""))
+@app.route("/sign_and_encrypt", methods=["POST"])
+def sign_and_encrypt():
+    # Verifica se o arquivo e a chave privada estão presentes
+    file = request.files.get("file")
+    private_key_path = os.path.join(SAVE_DIR, "private_key.pem")
+    aes_key_path = os.path.join(SAVE_DIR, "aes_key.key")
+
+    if not file:
+        return jsonify({"error": "No file provided"}), 400
+    if not os.path.exists(private_key_path):
+        return jsonify({"error": "Private key not found"}), 400
+    if not os.path.exists(aes_key_path):
+        return jsonify({"error": "AES key not found"}), 400
+
+    # Salva o arquivo enviado
+    original_file_path = os.path.join(UPLOAD_DIR, file.filename)
+    file.save(original_file_path)
+
+    # Assina o arquivo
+    signed_file_path = os.path.join(SAVE_DIR, f"signed_{file.filename}")
+    sign_file(original_file_path, private_key_path, signed_file_path)
+
+    # Cifra o arquivo
+    encrypted_file_path = os.path.join(SAVE_DIR, f"encrypted_{file.filename}")
+    encrypt_file(signed_file_path, aes_key_path, encrypted_file_path)
+
+    return jsonify({
+        "message": "File signed and encrypted successfully",
+        "signed_file": f"/download/signed_{file.filename}",
+        "encrypted_file": f"/download/encrypted_{file.filename}"
+    })
+
+
+@app.route("/download/<filename>")
+def download_file(filename):
+    file_path = os.path.join(SAVE_DIR, filename)
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
     return "File not found", 404

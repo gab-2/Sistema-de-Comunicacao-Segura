@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinatura e Cifragem</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/etapa3.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul id="sidebar-steps">
+                <li data-step="1" class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
+                <li data-step="2" class="completed"><span class="step-circle">2</span> Preparação</li>
+                <li data-step="3" class="active"><span class="step-circle">3</span> Assinatura</li>
+                <li data-step="4"><span class="step-circle">4</span> Proteção</li>
+                <li data-step="5"><span class="step-circle">5</span> Envio</li>
+                <li data-step="6"><span class="step-circle">6</span> Descriptografia</li>
+            </ul>
+        </nav>
+
+        <!-- Conteúdo Central -->
+        <main class="content">
+            <h1>Processo de Assinatura e Cifragem</h1>
+            <p class="description">Nesta etapa, o arquivo será assinado digitalmente e depois cifrado para garantir
+                autenticidade e confidencialidade.</p>
+
+            <!-- Etapas do Processo -->
+            <div class="process-steps">
+                <h2>O processo ocorre em duas etapas:</h2>
+                <ul>
+                    <li><i class="fas fa-signature"></i> Criação da assinatura digital usando a chave privada RSA</li>
+                    <li><i class="fas fa-lock"></i> Cifração do arquivo usando a chave simétrica AES</li>
+                </ul>
+                <button id="start-process" class="btn primary">Iniciar Processo</button>
+            </div>
+
+            <!-- Contêiner de Animação -->
+            <div id="animation-container" class="animation-container" style="display: none;">
+                <p class="animation-text">Processando: Assinatura Digital e Cifragem...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div id="process-results" class="results" style="display: none;">
+                <div class="result-card">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Arquivo Original</h3>
+                    <p>O arquivo está pronto para processamento.</p>
+                </div>
+                <div class="result-card">
+                    <i class="fas fa-signature"></i>
+                    <h3>Assinatura Digital</h3>
+                    <p>Garante a autenticidade do arquivo.</p>
+                </div>
+                <div class="result-card">
+                    <i class="fas fa-lock"></i>
+                    <h3>Cifragem</h3>
+                    <p>Protege o conteúdo do arquivo.</p>
+                </div>
+            </div>
+
+            <!-- Importância do Processo -->
+            <div class="info-box">
+                <h2><i class="fas fa-info-circle"></i> Por que este processo é importante?</h2>
+                <ul>
+                    <li>A assinatura prova que você é o autor do arquivo</li>
+                    <li>A cifragem garante que apenas o destinatário possa ler</li>
+                    <li>A combinação fornece segurança completa</li>
+                </ul>
+            </div>
+
+
+            <!-- Mensagem de Sucesso -->
+            <div id="success-message" class="success-message" style="display: none;">
+                <i class="fas fa-check-circle"></i> Arquivo assinado e cifrado com sucesso!
+            </div>
+
+            <!-- Botões de Navegação -->
+            <div class="navigation-buttons">
+                <button id="previous-button" class="btn secondary"><i class="fas fa-arrow-left"></i> Anterior</button>
+                <button id="next-button" class="btn primary" disabled>Próximo <i
+                        class="fas fa-arrow-right"></i></button>
+            </div>
+        </main>
+    </div>
+    <script src="/static/js/etapa3.js"></script>
+</body>
+
+</html>
