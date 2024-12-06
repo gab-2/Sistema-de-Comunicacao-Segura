@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from cryptography_module.keys import generate_rsa_keys, generate_aes_key
-from cryptography_module.crypto import sign_file, encrypt_file, protect_aes_key
+from cryptography_module.keys import generate_rsa_keys, generate_aes_key, load_rsa_private_key, load_rsa_public_key
+from cryptography_module.crypto import sign_file, encrypt_file, protect_aes_key, decrypt_file, verify_signature
 import os
 import hashlib
 
@@ -11,6 +11,7 @@ SAVE_DIR = "generated_files"
 UPLOAD_DIR = "uploaded_files"
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 @app.route("/")
 def index():
@@ -30,6 +31,16 @@ def etapa3():
 @app.route("/etapa4")
 def etapa4():
     return render_template("etapa4.html", current_step=4)
+
+
+@app.route("/etapa5")
+def etapa5():
+    return render_template("etapa5.html", current_step=5)
+
+
+@app.route("/etapa6")
+def etapa6():
+    return render_template("etapa6.html", current_step=6)
 
 
 @app.route("/generate_rsa", methods=["POST"])
@@ -150,6 +161,40 @@ def protect_aes_key_route():
     return jsonify({
         "message": "AES key protected successfully",
         "protected_key_file": f"/download/protected_aes_key.pem"
+    })
+
+
+@app.route("/decrypt_file", methods=["POST"])
+def decrypt_file_route():
+    # Carregar os arquivos
+    encrypted_file = request.files.get("encrypted_file")
+    signature_file = request.files.get("signature_file")
+    private_key_file = request.files.get("private_key_file")
+
+    if not encrypted_file or not signature_file or not private_key_file:
+        return jsonify({"error": "Missing files for decryption"}), 400
+
+    # Salvar os arquivos carregados
+    encrypted_file_path = os.path.join(UPLOAD_DIR, encrypted_file.filename)
+    signature_file_path = os.path.join(UPLOAD_DIR, signature_file.filename)
+    private_key_path = os.path.join(UPLOAD_DIR, private_key_file.filename)
+
+    encrypted_file.save(encrypted_file_path)
+    signature_file.save(signature_file_path)
+    private_key_path.save(private_key_path)
+
+    # Verificar a assinatura
+    if not verify_signature(encrypted_file_path, signature_file_path, private_key_path):
+        return jsonify({"error": "Signature verification failed"}), 400
+
+    # Descriptografar o arquivo
+    decrypted_file_path = os.path.join(
+        SAVE_DIR, f"decrypted_{encrypted_file.filename}")
+    decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path)
+
+    return jsonify({
+        "message": "File decrypted successfully",
+        "decrypted_file": f"/download/decrypted_{encrypted_file.filename}"
     })
 
 

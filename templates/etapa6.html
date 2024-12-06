@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descriptografia</title>
+    <link rel="stylesheet" href="/static/css/etapa6.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul id="sidebar-steps">
+                <li data-step="1" class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
+                <li data-step="2" class="completed"><span class="step-circle">2</span> Preparação</li>
+                <li data-step="3" class="completed"><span class="step-circle">3</span> Assinatura</li>
+                <li data-step="4" class="completed"><span class="step-circle">4</span> Proteção</li>
+                <li data-step="5" class="completed"><span class="step-circle">5</span> Envio</li>
+                <li data-step="6" class="active"><span class="step-circle">6</span> Descriptografia</li>
+            </ul>
+        </nav>
+
+        <!-- Conteúdo Principal -->
+        <main class="content">
+            <h1>Descriptografia</h1>
+
+            <!-- Texto informativo -->
+            <p id="info-text" class="info-text">
+                Para iniciar o processo de descriptografia, insira sua chave privada no campo abaixo e clique no botão
+                "Iniciar Descriptografia".
+            </p>
+
+            <!-- Entrada da Chave Privada -->
+            <div id="key-container" class="key-container">
+                <label for="private-key">Chave Privada:</label>
+                <input id="private-key" type="text" placeholder="Digite sua chave privada">
+                <button class="btn primary" id="decrypt-button">
+                    <i class="fas fa-unlock"></i> Iniciar Descriptografia
+                </button>
+            </div>
+
+            <!-- Animação de Descriptografia -->
+            <div id="decrypt-animation" class="decrypt-animation" style="display: none;">
+                <p>Processando... Descriptografando o arquivo</p>
+                <div class="loader"></div>
+            </div>
+
+            <!-- Mensagem de Sucesso -->
+            <div id="decrypt-success" class="card success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Arquivo Descriptografado com Sucesso!
+            </div>
+
+            <!-- Divisor -->
+            <hr class="divider">
+
+            <!-- Botão Anterior -->
+            <button id="previous-button" class="btn next">
+                ← Anterior
+            </button>
+        </main>
+    </div>
+
+    <script src="/static/js/etapa6.js"></script>
+</body>
+
+</html>
