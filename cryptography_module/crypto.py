@@ -1,20 +1,21 @@
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import hashes
 import os
+import logging
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def sign_file(file_path, private_key_path, signed_file_path):
+def sign_file(file_path, private_key_path, signature_path):
     """
     Assina digitalmente um arquivo usando uma chave privada RSA.
 
     :param file_path: Caminho do arquivo a ser assinado.
     :param private_key_path: Caminho da chave privada RSA.
-    :param signed_file_path: Caminho para salvar o arquivo assinado.
+    :param signature_path: Caminho para salvar o arquivo da assinatura.
     """
+    logging.debug(f"Iniciando a assinatura do arquivo: {file_path}")
+
     # Lê o arquivo original
     with open(file_path, "rb") as f:
         data = f.read()
@@ -26,7 +27,7 @@ def sign_file(file_path, private_key_path, signed_file_path):
             password=None
         )
 
-    # Assina o arquivo
+    # Gera a assinatura
     signature = private_key.sign(
         data,
         padding.PSS(
@@ -36,9 +37,11 @@ def sign_file(file_path, private_key_path, signed_file_path):
         hashes.SHA256()
     )
 
-    # Salva o arquivo assinado
-    with open(signed_file_path, "wb") as f:
-        f.write(signature + data)
+    # Salva a assinatura em um arquivo separado
+    with open(signature_path, "wb") as sig_file:
+        sig_file.write(signature)
+
+    logging.debug(f"Assinatura salva em: {signature_path}")
 
 
 def encrypt_file(file_path, aes_key_path, encrypted_file_path):
@@ -49,6 +52,8 @@ def encrypt_file(file_path, aes_key_path, encrypted_file_path):
     :param aes_key_path: Caminho da chave AES.
     :param encrypted_file_path: Caminho para salvar o arquivo cifrado.
     """
+    logging.debug(f"Iniciando criptografia do arquivo: {file_path}")
+
     # Lê o arquivo e a chave AES
     with open(file_path, "rb") as f:
         data = f.read()
@@ -68,6 +73,8 @@ def encrypt_file(file_path, aes_key_path, encrypted_file_path):
     with open(encrypted_file_path, "wb") as f:
         f.write(encrypted_data)
 
+    logging.debug(f"Arquivo criptografado salvo em: {encrypted_file_path}")
+
 
 def protect_aes_key(aes_key_path, public_key_path, output_path):
     """
@@ -77,6 +84,8 @@ def protect_aes_key(aes_key_path, public_key_path, output_path):
     :param public_key_path: Caminho do arquivo contendo a chave pública RSA.
     :param output_path: Caminho para salvar a chave AES cifrada.
     """
+    logging.debug("Protegendo a chave AES com a chave pública RSA.")
+
     # Lê a chave AES
     with open(aes_key_path, "rb") as aes_file:
         aes_key = aes_file.read()
@@ -99,6 +108,8 @@ def protect_aes_key(aes_key_path, public_key_path, output_path):
     with open(output_path, "wb") as output_file:
         output_file.write(encrypted_aes_key)
 
+    logging.debug(f"Chave AES protegida salva em: {output_path}")
+
 
 def verify_signature(file_path, signature_path, public_key_path):
     """
@@ -109,10 +120,13 @@ def verify_signature(file_path, signature_path, public_key_path):
     :param public_key_path: Caminho da chave pública RSA para verificação.
     :return: True se a assinatura for válida, False caso contrário.
     """
-    # Lê o arquivo original e a assinatura
+    logging.debug("Verificando a assinatura digital.")
+
+    # Lê o arquivo original
     with open(file_path, "rb") as f:
         data = f.read()
 
+    # Lê a assinatura
     with open(signature_path, "rb") as sig_file:
         signature = sig_file.read()
 
@@ -133,9 +147,11 @@ def verify_signature(file_path, signature_path, public_key_path):
             ),
             hashes.SHA256()
         )
-        return True  # Assinatura válida
+        logging.debug("Assinatura válida.")
+        return True
     except Exception as e:
-        return False  # Assinatura inválida
+        logging.error(f"Erro ao verificar a assinatura: {e}")
+        return False
 
 
 def decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path):
@@ -146,6 +162,8 @@ def decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path):
     :param private_key_path: Caminho da chave privada RSA para descriptografar o arquivo.
     :param decrypted_file_path: Caminho para salvar o arquivo descriptografado.
     """
+    logging.debug(f"Descriptografando o arquivo: {encrypted_file_path}")
+
     # Lê o arquivo cifrado
     with open(encrypted_file_path, "rb") as f:
         encrypted_data = f.read()
@@ -158,18 +176,21 @@ def decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path):
         )
 
     # Descriptografa a chave AES usando a chave privada RSA
-    decrypted_aes_key = private_key.decrypt(
-        # Assumindo que a chave AES foi cifrada e tem tamanho fixo de 256 bytes
-        encrypted_data[:256],
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
+    try:
+        decrypted_aes_key = private_key.decrypt(
+            encrypted_data[:256],
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
         )
-    )
+    except Exception as e:
+        logging.error(f"Erro ao descriptografar a chave AES: {e}")
+        raise ValueError(f"Erro ao descriptografar a chave AES: {e}")
 
-    # Extraímos o IV e o restante dos dados para a descriptografia do arquivo
-    iv = encrypted_data[256:272]  # O IV deve ser o próximo bloco de 16 bytes
+    # Extraímos o IV e os dados cifrados
+    iv = encrypted_data[256:272]
     cipher_data = encrypted_data[272:]
 
     # Descriptografa os dados do arquivo usando o AES
@@ -180,3 +201,5 @@ def decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path):
     # Salva o arquivo descriptografado
     with open(decrypted_file_path, "wb") as f:
         f.write(decrypted_data)
+
+    logging.debug(f"Arquivo descriptografado salvo em: {decrypted_file_path}")

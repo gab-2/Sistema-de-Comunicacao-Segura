@@ -3,6 +3,13 @@ from cryptography_module.keys import generate_rsa_keys, generate_aes_key, load_r
 from cryptography_module.crypto import sign_file, encrypt_file, protect_aes_key, decrypt_file, verify_signature
 import os
 import hashlib
+import logging
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+# Configuração de logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 
@@ -12,41 +19,53 @@ UPLOAD_DIR = "uploaded_files"
 os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Funções Auxiliares
+def save_uploaded_file(file, directory, filename):
+    if not file:
+        return None, "Nenhum arquivo foi enviado."
+    filepath = os.path.join(directory, filename)
+    try:
+        file.save(filepath)
+        return filepath, None
+    except Exception as e:
+        return None, f"Erro ao salvar o arquivo: {e}"
 
+def calculate_sha256(filepath):
+    sha256_hash = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
+# Rotas de navegação
 @app.route("/")
 def index():
     return render_template("etapa1.html", current_step=1)
-
 
 @app.route("/etapa2")
 def etapa2():
     return render_template("etapa2.html", current_step=2)
 
-
 @app.route("/etapa3")
 def etapa3():
     return render_template("etapa3.html", current_step=3)
-
 
 @app.route("/etapa4")
 def etapa4():
     return render_template("etapa4.html", current_step=4)
 
-
 @app.route("/etapa5")
 def etapa5():
     return render_template("etapa5.html", current_step=5)
-
 
 @app.route("/etapa6")
 def etapa6():
     return render_template("etapa6.html", current_step=6)
 
-
+# Gerar chaves RSA
 @app.route("/generate_rsa", methods=["POST"])
 def generate_rsa():
     private_key, public_key = generate_rsa_keys()
-    # Salvar as chaves em arquivos
     private_key_path = os.path.join(SAVE_DIR, "private_key.pem")
     public_key_path = os.path.join(SAVE_DIR, "public_key.pem")
     with open(private_key_path, "wb") as priv_file:
@@ -60,7 +79,7 @@ def generate_rsa():
         "public_key_file": "/download/public_key"
     })
 
-
+# Gerar chave AES
 @app.route("/generate_aes", methods=["POST"])
 def generate_aes():
     aes_key = generate_aes_key()
@@ -72,78 +91,51 @@ def generate_aes():
         "aes_key_file": "/download/aes_key"
     })
 
-
-@app.route("/upload_public_key", methods=["POST"])
-def upload_public_key():
-    if "file" not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files["file"]
-    if file.filename == "":
-        return jsonify({"error": "No file selected"}), 400
-    if file:
-        filepath = os.path.join(UPLOAD_DIR, file.filename)
-        file.save(filepath)
-        return jsonify({"message": "File uploaded successfully", "filename": file.filename})
-
-
+# Upload de arquivos
 @app.route("/upload_file", methods=["POST"])
 def upload_file():
-    if "file" not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files["file"]
-    if file.filename == "":
-        return jsonify({"error": "No file selected"}), 400
-    if file:
-        filepath = os.path.join(UPLOAD_DIR, file.filename)
-        file.save(filepath)
+    file = request.files.get("file")
+    filepath, error = save_uploaded_file(file, UPLOAD_DIR, file.filename)
+    if error:
+        return jsonify({"error": error}), 400
 
-        # Calcula o hash SHA-256 do arquivo
-        sha256_hash = hashlib.sha256()
-        with open(filepath, "rb") as f:
-            for byte_block in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(byte_block)
+    file_hash = calculate_sha256(filepath)
+    return jsonify({
+        "message": "Arquivo carregado com sucesso.",
+        "filename": file.filename,
+        "filesize": os.path.getsize(filepath),
+        "hash": file_hash
+    })
 
-        return jsonify({
-            "message": "File uploaded successfully",
-            "filename": file.filename,
-            "filesize": os.path.getsize(filepath),
-            "hash": sha256_hash.hexdigest()
-        })
-
-
+# Assinar e criptografar arquivo
 @app.route("/sign_and_encrypt", methods=["POST"])
 def sign_and_encrypt():
-    # Verifica se o arquivo e a chave privada estão presentes
     file = request.files.get("file")
+    original_file_path, error = save_uploaded_file(file, UPLOAD_DIR, file.filename)
+    if error:
+        return jsonify({"error": error}), 400
+
     private_key_path = os.path.join(SAVE_DIR, "private_key.pem")
     aes_key_path = os.path.join(SAVE_DIR, "aes_key.key")
 
-    if not file:
-        return jsonify({"error": "No file provided"}), 400
     if not os.path.exists(private_key_path):
-        return jsonify({"error": "Private key not found"}), 400
+        return jsonify({"error": "Chave privada não encontrada."}), 400
     if not os.path.exists(aes_key_path):
-        return jsonify({"error": "AES key not found"}), 400
+        return jsonify({"error": "Chave AES não encontrada."}), 400
 
-    # Salva o arquivo enviado
-    original_file_path = os.path.join(UPLOAD_DIR, file.filename)
-    file.save(original_file_path)
-
-    # Assina o arquivo
     signed_file_path = os.path.join(SAVE_DIR, f"signed_{file.filename}")
     sign_file(original_file_path, private_key_path, signed_file_path)
 
-    # Cifra o arquivo
     encrypted_file_path = os.path.join(SAVE_DIR, f"encrypted_{file.filename}")
     encrypt_file(signed_file_path, aes_key_path, encrypted_file_path)
 
     return jsonify({
-        "message": "File signed and encrypted successfully",
+        "message": "Arquivo assinado e cifrado com sucesso.",
         "signed_file": f"/download/signed_{file.filename}",
         "encrypted_file": f"/download/encrypted_{file.filename}"
     })
 
-
+# Proteger chave AES com chave pública
 @app.route("/protect_aes_key", methods=["POST"])
 def protect_aes_key_route():
     public_key_path = os.path.join(UPLOAD_DIR, "public_key.pem")
@@ -151,60 +143,97 @@ def protect_aes_key_route():
     protected_aes_key_path = os.path.join(SAVE_DIR, "protected_aes_key.pem")
 
     if not os.path.exists(public_key_path):
-        return jsonify({"error": "Public key not found"}), 400
+        return jsonify({"error": "Chave pública não encontrada."}), 400
     if not os.path.exists(aes_key_path):
-        return jsonify({"error": "AES key not found"}), 400
+        return jsonify({"error": "Chave AES não encontrada."}), 400
 
-    # Protege a chave AES
     protect_aes_key(aes_key_path, public_key_path, protected_aes_key_path)
-
     return jsonify({
-        "message": "AES key protected successfully",
+        "message": "Chave AES protegida com sucesso.",
         "protected_key_file": f"/download/protected_aes_key.pem"
     })
 
-
+# Endpoint para descriptografar um arquivo
 @app.route("/decrypt_file", methods=["POST"])
 def decrypt_file_route():
-    # Carregar os arquivos
     encrypted_file = request.files.get("encrypted_file")
     signature_file = request.files.get("signature_file")
     private_key_file = request.files.get("private_key_file")
 
-    if not encrypted_file or not signature_file or not private_key_file:
-        return jsonify({"error": "Missing files for decryption"}), 400
+    # Verifica se todos os arquivos necessários foram enviados
+    if not all([encrypted_file, signature_file, private_key_file]):
+        return jsonify({"error": "Todos os arquivos (arquivo criptografado, assinatura e chave privada) são necessários."}), 400
 
-    # Salvar os arquivos carregados
-    encrypted_file_path = os.path.join(UPLOAD_DIR, encrypted_file.filename)
-    signature_file_path = os.path.join(UPLOAD_DIR, signature_file.filename)
-    private_key_path = os.path.join(UPLOAD_DIR, private_key_file.filename)
+    # Salvar os arquivos enviados
+    encrypted_file_path, error = save_uploaded_file(encrypted_file, UPLOAD_DIR, encrypted_file.filename)
+    if error:
+        return jsonify({"error": error}), 400
 
-    encrypted_file.save(encrypted_file_path)
-    signature_file.save(signature_file_path)
-    private_key_path.save(private_key_path)
+    signature_file_path, error = save_uploaded_file(signature_file, UPLOAD_DIR, signature_file.filename)
+    if error:
+        return jsonify({"error": error}), 400
 
-    # Verificar a assinatura
-    if not verify_signature(encrypted_file_path, signature_file_path, private_key_path):
-        return jsonify({"error": "Signature verification failed"}), 400
+    private_key_path, error = save_uploaded_file(private_key_file, UPLOAD_DIR, private_key_file.filename)
+    if error:
+        return jsonify({"error": error}), 400
+
+    # Verificar assinatura do arquivo
+    public_key_path = os.path.join(SAVE_DIR, "public_key.pem")
+    if not os.path.exists(public_key_path):
+        return jsonify({"error": "Chave pública não encontrada para validar a assinatura."}), 400
+
+    is_signature_valid = verify_signature(encrypted_file_path, signature_file_path, public_key_path)
+    if not is_signature_valid:
+        return jsonify({"error": "A assinatura é inválida."}), 400
 
     # Descriptografar o arquivo
-    decrypted_file_path = os.path.join(
-        SAVE_DIR, f"decrypted_{encrypted_file.filename}")
-    decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path)
+    decrypted_file_path = os.path.join(SAVE_DIR, f"decrypted_{encrypted_file.filename}")
+    try:
+        decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path)
+    except Exception as e:
+        logging.error(f"Erro durante a descriptografia: {e}")
+        return jsonify({"error": f"Erro durante a descriptografia: {e}"}), 500
 
     return jsonify({
-        "message": "File decrypted successfully",
-        "decrypted_file": f"/download/decrypted_{encrypted_file.filename}"
+        "message": "Arquivo descriptografado com sucesso.",
+        "decrypted_file": f"/download/{os.path.basename(decrypted_file_path)}"
     })
 
 
-@app.route("/download/<filename>")
-def download_file(filename):
-    file_path = os.path.join(SAVE_DIR, filename)
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
-    return "File not found", 404
+# Validar arquivo e assinatura
+@app.route("/validate_file", methods=["POST"])
+def validate_file():
+    encrypted_file = request.files.get("encrypted_file")
+    signature_file = request.files.get("signature_file")
+    public_key_file = request.files.get("public_key_file")
+    private_key_file = request.files.get("private_key_file")
 
+    if not all([encrypted_file, signature_file, public_key_file, private_key_file]):
+        return jsonify({"error": "Todos os arquivos devem ser enviados."}), 400
+
+    # Salvar arquivos
+    encrypted_file_path, error = save_uploaded_file(encrypted_file, UPLOAD_DIR, encrypted_file.filename)
+    if error:
+        return jsonify({"error": error}), 400
+
+    signature_file_path, error = save_uploaded_file(signature_file, UPLOAD_DIR, signature_file.filename)
+    public_key_path, error = save_uploaded_file(public_key_file, UPLOAD_DIR, public_key_file.filename)
+    private_key_path, error = save_uploaded_file(private_key_file, UPLOAD_DIR, private_key_file.filename)
+
+    if error:
+        return jsonify({"error": error}), 400
+
+    is_signature_valid = verify_signature(encrypted_file_path, signature_file_path, public_key_path)
+    if not is_signature_valid:
+        return jsonify({"error": "A assinatura é inválida."}), 400
+
+    decrypted_file_path = os.path.join(SAVE_DIR, f"decrypted_{encrypted_file.filename}")
+    decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path)
+
+    return jsonify({
+        "message": "Arquivo validado com sucesso!",
+        "decrypted_file": f"/download/{os.path.basename(decrypted_file_path)}"
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)

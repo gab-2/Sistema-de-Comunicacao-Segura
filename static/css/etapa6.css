@@ -92,9 +92,7 @@ body {
 
 /* Entrada da chave privada */
 .key-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .key-container input {
@@ -103,6 +101,7 @@ body {
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #f9f9f9;
+  width: 100%;
 }
 
 .key-container input:focus {
@@ -110,22 +109,72 @@ body {
   border-color: #007bff;
 }
 
+/* Upload de Arquivos */
+.file-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.file-upload-container label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.file-upload-container input[type="file"] {
+  font-size: 14px;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+/* Botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn i {
+  margin-right: 8px;
+}
+
+/* Botão Primário */
 .btn.primary {
   background-color: #007bff;
   color: white;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  width: 220px;
 }
 
 .btn.primary:hover {
   background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Botão Anterior */
+.btn.next {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn.next:hover {
+  background-color: #5a6268;
+  transform: scale(1.05);
+}
+
+/* Efeito de clique */
+.btn:active {
+  transform: scale(0.95);
 }
 
 /* Animação de descriptografia */
@@ -181,23 +230,53 @@ body {
 }
 
 /* Botão Anterior */
-.btn.next {
-  background-color: #6c757d;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.btn.next:hover {
-  background-color: #5a6268;
-}
-
-/* Botão Anterior */
 #previous-button {
   margin-top: 30px;
 }
-    
+
+/* Modal - Tela escura */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+/* Conteúdo do modal */
+.modal-content {
+  background-color: #ffffff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 50%;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Botão de fechar no modal */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+}
+
+/* Texto do modal */
+#modal-message {
+  font-size: 18px;
+  color: #333;
+}
