@@ -29,6 +29,14 @@
             <p class="description">Nesta etapa, o arquivo será assinado digitalmente e depois cifrado para garantir
                 autenticidade e confidencialidade.</p>
 
+            <!-- Informações do Arquivo da Etapa 2 -->
+            <div id="file-info-container" class="file-info" style="display: none;">
+                <h2>Informações do Arquivo Selecionado</h2>
+                <p><strong>Nome do Arquivo:</strong> <span id="file-name"></span></p>
+                <p><strong>Tamanho:</strong> <span id="file-size"></span></p>
+                <p><strong>Hash SHA-256:</strong> <span id="file-hash"></span></p>
+            </div>
+
             <!-- Etapas do Processo -->
             <div class="process-steps">
                 <h2>O processo ocorre em duas etapas:</h2>
@@ -75,7 +83,6 @@
                     <li>A combinação fornece segurança completa</li>
                 </ul>
             </div>
-
 
             <!-- Mensagem de Sucesso -->
             <div id="success-message" class="success-message" style="display: none;">

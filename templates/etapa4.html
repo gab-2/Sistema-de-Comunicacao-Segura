@@ -26,15 +26,18 @@
         <!-- Conteúdo Central -->
         <main class="content">
             <h1>Proteção da Chave Simétrica</h1>
-            <p class="description">Nesta etapa, a chave simétrica AES é protegida usando a chave pública do destinatário, garantindo que apenas ele possa recuperá-la posteriormente.</p>
+            <p class="description">
+                Nesta etapa, a chave simétrica AES será protegida usando a chave pública do destinatário. 
+                Isso garante que apenas o destinatário possa descriptografá-la no futuro.
+            </p>
 
             <!-- Etapas do Processo -->
             <div class="process-steps">
                 <h2>Por que proteger a chave simétrica?</h2>
                 <ul>
-                    <li>A chave AES é usada para cifrar o arquivo principal</li>
-                    <li>Ela precisa ser compartilhada com o professor de forma segura</li>
-                    <li>A proteção é feita usando criptografia assimétrica RSA</li>
+                    <li>A chave AES é usada para cifrar o arquivo principal.</li>
+                    <li>Ela precisa ser compartilhada com o professor de forma segura.</li>
+                    <li>A proteção é feita usando criptografia assimétrica RSA.</li>
                 </ul>
                 <button id="protect-aes-key" class="btn primary">Proteger Chave Simétrica</button>
             </div>
@@ -68,24 +71,32 @@
             <div class="info-box">
                 <h2><i class="fas fa-info-circle"></i> Como funciona?</h2>
                 <ul>
-                    <li>A chave AES é cifrada com a chave pública RSA do professor</li>
-                    <li>Apenas o professor, com sua chave privada, poderá descriptografá-la</li>
-                    <li>Este processo garante o compartilhamento seguro da chave</li>
+                    <li>A chave AES é cifrada com a chave pública RSA do professor.</li>
+                    <li>Apenas o professor, com sua chave privada, poderá descriptografá-la.</li>
+                    <li>Este processo garante o compartilhamento seguro da chave.</li>
                 </ul>
             </div>
 
             <!-- Mensagem de Sucesso -->
             <div id="success-message" class="success-message" style="display: none;">
                 <i class="fas fa-check-circle"></i> Chave simétrica protegida com sucesso!
+                <a id="download-protected-key" href="#" class="btn download" style="display: none;">
+                    <i class="fas fa-download"></i> Baixar Chave Protegida
+                </a>
             </div>
 
             <!-- Botões de Navegação -->
             <div class="navigation-buttons">
-                <button id="previous-button" class="btn secondary"><i class="fas fa-arrow-left"></i> Anterior</button>
-                <button id="next-button" class="btn primary" disabled>Próximo <i class="fas fa-arrow-right"></i></button>
+                <button id="previous-button" class="btn secondary">
+                    <i class="fas fa-arrow-left"></i> Anterior
+                </button>
+                <button id="next-button" class="btn primary" disabled>
+                    Próximo <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
         </main>
     </div>
+
     <script src="/static/js/etapa4.js"></script>
 </body>
 
