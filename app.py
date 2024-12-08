@@ -91,53 +91,6 @@ def generate_aes():
         "aes_key_file": "/download/aes_key"
     })
 
-# Rota para download da chave AES
-@app.route('/download/aes_key', methods=['GET'])
-def download_aes_key():
-    try:
-        aes_key_path = os.path.join(SAVE_DIR, "aes_key.key")
-        
-        # Verifica se o arquivo existe
-        if not os.path.exists(aes_key_path):
-            raise FileNotFoundError(f"Arquivo não encontrado: {aes_key_path}")
-        
-        # Retorna o arquivo para download
-        return send_file(aes_key_path, as_attachment=True)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 404
-
-@app.route('/download/private_key', methods=['GET'])
-def download_private_key():
-    try:
-        # Caminho absoluto para a chave privada
-        private_key_path = os.path.join(SAVE_DIR, "private_key.pem")
-        
-        # Verifique se o arquivo existe
-        if not os.path.exists(private_key_path):
-            raise FileNotFoundError(f"Arquivo não encontrado: {private_key_path}")
-        
-        # Retorne o arquivo
-        return send_file(private_key_path, as_attachment=True)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 404
-
-
-@app.route('/download/public_key', methods=['GET'])
-def download_public_key():
-    try:
-        # Caminho absoluto para a chave pública
-        public_key_path = os.path.join(SAVE_DIR, "public_key.pem")
-        
-        # Verifique se o arquivo existe
-        if not os.path.exists(public_key_path):
-            raise FileNotFoundError(f"Arquivo não encontrado: {public_key_path}")
-        
-        # Retorne o arquivo
-        return send_file(public_key_path, as_attachment=True)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 404
-
-
 # Upload de arquivos
 @app.route("/upload_file", methods=["POST"])
 def upload_file():
