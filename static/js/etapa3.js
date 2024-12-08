@@ -5,29 +5,83 @@ const startProcessButton = document.getElementById("start-process");
 const processResults = document.getElementById("process-results");
 const successMessage = document.getElementById("success-message");
 const animationContainer = document.getElementById("animation-container");
+const downloadLink = document.createElement("a"); // Link de download
 
-// Botão "Iniciar Processo"
-startProcessButton.addEventListener("click", () => {
+// Configurações iniciais do link de download
+downloadLink.classList.add("btn", "download");
+downloadLink.style.display = "none";
+downloadLink.innerHTML = `<i class="fas fa-download"></i> Baixar Arquivo Cifrado`;
+successMessage.appendChild(downloadLink);
+
+// Função para obter informações do arquivo da etapa 2
+const getStoredFileInfo = () => {
+    const fileData = localStorage.getItem("uploadedFile"); // Certifique-se de usar a mesma chave da etapa 2
+    if (!fileData) {
+        alert("As informações do arquivo não foram encontradas. Por favor, retorne à etapa 2.");
+        window.location.href = "/etapa2";
+        return null;
+    }
+    return JSON.parse(fileData); // Converte os dados armazenados em objeto
+};
+
+// Exibe as informações do arquivo carregado da etapa 2
+const displayFileInfo = () => {
+    const fileInfoContainer = document.getElementById("file-info-container");
+    const fileInfo = getStoredFileInfo();
+
+    if (fileInfo) {
+        fileInfoContainer.innerHTML = `
+            <p><strong>Nome do Arquivo:</strong> ${fileInfo.name}</p>
+            <p><strong>Tamanho:</strong> ${(fileInfo.size / 1024).toFixed(2)} KB</p>
+            <p><strong>Hash SHA-256:</strong> ${fileInfo.hash}</p>
+        `;
+        fileInfoContainer.style.display = "block";
+    }
+};
+startProcessButton.addEventListener("click", async () => {
     // Exibir a animação do processo
     startProcessButton.disabled = true;
     animationContainer.style.display = "block";
 
-    // Simulação do progresso com a animação
-    const progressFill = document.querySelector(".progress-fill");
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += 10;
-        progressFill.style.width = `${progress}%`;
+    // Obtenha o nome do arquivo da etapa 2
+    const fileInfo = JSON.parse(localStorage.getItem("uploadedFile"));
+    if (!fileInfo) {
+        alert("As informações do arquivo não foram encontradas. Por favor, retorne à etapa 2.");
+        startProcessButton.disabled = false;
+        animationContainer.style.display = "none";
+        return;
+    }
 
-        if (progress >= 100) {
-            clearInterval(progressInterval);
-            animationContainer.style.display = "none"; // Esconde a animação
-            processResults.style.display = "flex"; // Exibe os resultados
-            successMessage.style.display = "block"; // Mostra a mensagem de sucesso
-            nextButton.disabled = false; // Habilita o botão "Próximo"
+    try {
+        // Envia o nome do arquivo para o backend
+        const backendResponse = await fetch("/sign_and_encrypt", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name: fileInfo.name }),
+        });
+
+        const result = await backendResponse.json();
+
+        if (backendResponse.ok) {
+            // Exibe resultados e link de download
+            animationContainer.style.display = "none";
+            processResults.style.display = "flex";
+            successMessage.style.display = "block";
+            downloadLink.href = result.encrypted_file;
+            downloadLink.style.display = "inline-block";
+            nextButton.disabled = false;
+        } else {
+            throw new Error(result.error || "Erro durante o processamento.");
         }
-    }, 200); // Atualiza a cada 200ms
+    } catch (error) {
+        alert(error.message);
+        startProcessButton.disabled = false;
+        animationContainer.style.display = "none";
+    }
 });
+
 
 // Botão Anterior
 previousButton.addEventListener("click", () => {
@@ -38,3 +92,6 @@ previousButton.addEventListener("click", () => {
 nextButton.addEventListener("click", () => {
     window.location.href = "/etapa4"; // Redireciona para a próxima etapa
 });
+
+// Inicializa a página exibindo as informações do arquivo
+displayFileInfo();
