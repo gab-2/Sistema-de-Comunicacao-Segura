@@ -37,11 +37,11 @@
                 <label for="private-key-file">Arquivo da Chave Privada:</label>
                 <input id="private-key-file" type="file" accept=".pem">
             </div>
-
+            
             <!-- Upload de Arquivos -->
             <div id="file-upload-container" class="file-upload-container">
                 <label for="encrypted-file-input">Arquivo Criptografado:</label>
-                <input id="encrypted-file-input" type="file" accept=".txt,.enc">
+                <input id="encrypted-file-input" type="file" accept=".enc,.txt,.pdf,.zip">
             </div>
 
             <!-- Botão de Iniciar Descriptografia -->
@@ -58,6 +58,10 @@
             <!-- Mensagem de Sucesso -->
             <div id="decrypt-success" class="card success" style="display: none;">
                 <i class="fas fa-check-circle"></i> Arquivo Descriptografado com Sucesso!
+                <!-- Espaço para o link de download -->
+                <div id="download-container" class="download-container" style="margin-top: 15px;">
+                    <!-- O link será adicionado dinamicamente pelo JS -->
+                </div>
             </div>
 
             <!-- Divisor -->

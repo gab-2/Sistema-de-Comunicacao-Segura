@@ -1,12 +1,18 @@
 from flask import Flask, render_template, request, jsonify, send_file, session
-from cryptography_module.keys import generate_rsa_keys, generate_aes_key, load_rsa_private_key, load_rsa_public_key
-from cryptography_module.crypto import sign_file, encrypt_file, protect_aes_key, decrypt_file, verify_signature
-import os
-import hashlib
-import logging
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import os
+import zipfile
+import hashlib
+import logging
+from cryptography_module.keys import generate_rsa_keys, generate_aes_key, load_rsa_private_key, load_rsa_public_key
+from cryptography_module.crypto import sign_file, encrypt_file, protect_aes_key, decrypt_file, verify_signature
+import zipfile
+
+
 
 # Configuração de logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -159,6 +165,59 @@ def generate_aes():
         "aes_key": aes_key.hex(),
         "aes_key_file": "/download/aes_key"
     })
+
+@app.route('/download/package_zip', methods=['GET'])
+def download_package_zip():
+    try:
+        # Diretório onde os arquivos são armazenados
+        generated_dir = "generated_files"
+
+        # Procurar pelos arquivos dinamicamente (substitua pelo critério adequado)
+        encrypted_file_path = os.path.join(generated_dir, next(
+            (f for f in os.listdir(generated_dir) if f.startswith("encrypted_")), None))
+        signed_file_path = os.path.join(generated_dir, next(
+            (f for f in os.listdir(generated_dir) if f.startswith("signed_")), None))
+        protected_key_path = os.path.join(generated_dir, "protected_aes_key.pem")  # Este parece ser fixo
+
+        # Verificar se todos os arquivos foram encontrados
+        if not encrypted_file_path or not os.path.exists(encrypted_file_path):
+            app.logger.error(f"Arquivo não encontrado: {encrypted_file_path}")
+            return jsonify({"error": f"Arquivo não encontrado: {encrypted_file_path}"}), 404
+        if not signed_file_path or not os.path.exists(signed_file_path):
+            app.logger.error(f"Arquivo não encontrado: {signed_file_path}")
+            return jsonify({"error": f"Arquivo não encontrado: {signed_file_path}"}), 404
+        if not os.path.exists(protected_key_path):
+            app.logger.error(f"Arquivo não encontrado: {protected_key_path}")
+            return jsonify({"error": f"Arquivo não encontrado: {protected_key_path}"}), 404
+
+        app.logger.info("Todos os arquivos necessários foram encontrados.")
+
+        # Nome do arquivo ZIP
+        zip_file_path = os.path.join(generated_dir, "package.zip")
+
+        # Criar o arquivo ZIP
+        app.logger.info("Iniciando a criação do arquivo ZIP...")
+        with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+            zipf.write(encrypted_file_path, arcname=os.path.basename(encrypted_file_path))
+            zipf.write(signed_file_path, arcname=os.path.basename(signed_file_path))
+            zipf.write(protected_key_path, arcname=os.path.basename(protected_key_path))
+
+        # Verificar se o arquivo ZIP foi criado
+        if not os.path.exists(zip_file_path):
+            app.logger.error("Falha ao criar o arquivo ZIP.")
+            return jsonify({"error": "Falha ao criar o arquivo ZIP."}), 500
+
+        app.logger.info(f"Arquivo ZIP criado com sucesso: {zip_file_path}")
+
+        # Enviar o arquivo ZIP para download
+        return send_file(zip_file_path, mimetype='application/zip', as_attachment=True, download_name="package.zip")
+
+    except Exception as e:
+        # Log do erro para depuração
+        app.logger.error(f"Erro ao gerar ou enviar o ZIP: {str(e)}")
+        return jsonify({"error": f"Erro ao gerar ou enviar o ZIP: {str(e)}"}), 500
+
+
 
 @app.route('/download/signed_file', methods=['GET'])
 def download_signed_file():
@@ -328,7 +387,68 @@ def download_file(filename):
     except Exception as e:
         logging.error(f"Erro ao tentar enviar o arquivo: {str(e)}")
         return jsonify({"error": f"Erro ao processar o download: {str(e)}"}), 500
+@app.route('/decrypt_file', methods=['POST'])
+def decrypt_file():
+    try:
+        # Obter arquivos enviados
+        private_key_file = request.files.get('private_key_file')
+        encrypted_file = request.files.get('encrypted_file')
 
+        # Validar se os arquivos foram enviados
+        if not private_key_file:
+            return jsonify({"error": "Arquivo de chave privada não enviado."}), 400
+        if not encrypted_file:
+            return jsonify({"error": "Arquivo criptografado não enviado."}), 400
+
+        # Salvar arquivos no diretório temporário
+        private_key_path = os.path.join("uploaded_files", "private_key.pem")
+        encrypted_file_path = os.path.join("uploaded_files", encrypted_file.filename)
+
+        private_key_file.save(private_key_path)
+        encrypted_file.save(encrypted_file_path)
+
+        # Verificar se o arquivo criptografado é um ZIP
+        extracted_dir = os.path.join("uploaded_files", "extracted")
+        os.makedirs(extracted_dir, exist_ok=True)
+
+        if zipfile.is_zipfile(encrypted_file_path):
+            with zipfile.ZipFile(encrypted_file_path, 'r') as zip_ref:
+                zip_ref.extractall(extracted_dir)
+
+            # Verificar dinamicamente os arquivos extraídos
+            extracted_files = os.listdir(extracted_dir)
+            protected_key_file = None
+            encrypted_data_file = None
+            signature_file = None
+
+            # Identificar arquivos baseados em extensões ou padrões
+            for file in extracted_files:
+                if file.endswith('.pem') and 'aes' in file:
+                    protected_key_file = os.path.join(extracted_dir, file)
+                elif file.endswith('.pdf') or file.endswith('.enc'):
+                    encrypted_data_file = os.path.join(extracted_dir, file)
+                elif file.endswith('.sig') or file.startswith('signed'):
+                    signature_file = os.path.join(extracted_dir, file)
+
+            # Validar se todos os arquivos necessários foram encontrados
+            if not protected_key_file:
+                return jsonify({"error": "Arquivo de chave AES protegida não encontrado no pacote."}), 400
+            if not encrypted_data_file:
+                return jsonify({"error": "Arquivo criptografado não encontrado no pacote."}), 400
+            if not signature_file:
+                return jsonify({"error": "Arquivo de assinatura não encontrado no pacote."}), 400
+
+            # Continue com o processamento usando os arquivos identificados
+            # Exemplo: descriptografar, verificar assinatura, etc.
+            # ...
+
+            return jsonify({"message": "Arquivos processados com sucesso!"}), 200
+        else:
+            return jsonify({"error": "O arquivo enviado não é um pacote ZIP válido."}), 400
+
+    except Exception as e:
+        logging.error(f"Erro durante a descriptografia: {e}")
+        return jsonify({"error": "Erro interno no servidor. Verifique os logs para mais detalhes."}), 500
 
 
 # Upload de arquivos
@@ -456,35 +576,35 @@ def protect_aes_key_route():
 # Endpoint para descriptografar um arquivo
 @app.route("/decrypt_file", methods=["POST"])
 def decrypt_file_route():
-    private_key_file = request.files.get("private_key_file")  # Chave privada como arquivo
-    encrypted_file = request.files.get("encrypted_file")      # Arquivo criptografado
+    private_key_file = request.files.get("private_key_file")
+    encrypted_file = request.files.get("encrypted_file")
 
+    # Validate uploaded files
     if not private_key_file or not encrypted_file:
-        logging.error("Arquivos ausentes: chave privada ou arquivo criptografado.")
-        return jsonify({"error": "Os arquivos da chave privada e o arquivo criptografado são obrigatórios."}), 400
+        return jsonify({"error": "Os arquivos da chave privada e do arquivo criptografado são obrigatórios."}), 400
 
-    logging.debug(f"Arquivo da chave privada: {private_key_file.filename}")
-    logging.debug(f"Arquivo criptografado: {encrypted_file.filename}")
+    # Save uploaded files
+    private_key_path, private_key_error = save_uploaded_file(private_key_file, UPLOAD_DIR, private_key_file.filename)
+    encrypted_file_path, encrypted_file_error = save_uploaded_file(encrypted_file, UPLOAD_DIR, encrypted_file.filename)
 
-    # Salvar os arquivos no servidor para processamento
-    private_key_path, error1 = save_uploaded_file(private_key_file, UPLOAD_DIR, private_key_file.filename)
-    encrypted_file_path, error2 = save_uploaded_file(encrypted_file, UPLOAD_DIR, encrypted_file.filename)
+    if private_key_error or encrypted_file_error:
+        return jsonify({"error": private_key_error or encrypted_file_error}), 500
 
-    if error1 or error2:
-        logging.error(f"Erro ao salvar arquivos: {error1 or error2}")
-        return jsonify({"error": error1 or error2}), 500
-
+    # Path for the decrypted file
     decrypted_file_path = os.path.join(SAVE_DIR, f"decrypted_{encrypted_file.filename}")
 
     try:
-        with open(private_key_path, "rb") as pk_file:
-            private_key_content = pk_file.read()
+        # Read private key content
+        with open(private_key_path, "rb") as key_file:
+            private_key_content = key_file.read()
 
+        # Perform decryption
         decrypt_file(encrypted_file_path, private_key_content, decrypted_file_path)
     except Exception as e:
         logging.error(f"Erro durante a descriptografia: {e}")
-        return jsonify({"error": f"Erro durante a descriptografia: {e}"}), 500
+        return jsonify({"error": str(e)}), 500
 
+    # Return success
     return jsonify({
         "message": "Arquivo descriptografado com sucesso.",
         "decrypted_file": f"/download/{os.path.basename(decrypted_file_path)}"

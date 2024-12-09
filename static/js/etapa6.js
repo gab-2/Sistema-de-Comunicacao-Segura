@@ -28,41 +28,48 @@ const updateInfoText = (text) => {
 
 // Função para realizar a descriptografia
 const startDecrypt = async () => {
-    const privateKeyFile = document.getElementById("private-key-file-input")?.files[0]; // Arquivo da chave privada
-    const encryptedFile = document.getElementById("encrypted-file-input")?.files[0]; // Arquivo criptografado
+    if (isDecrypting) return;
 
-    if (!privateKeyFile) {
-        alert("Por favor, selecione o arquivo da chave privada.");
+    const privateKeyFile = document.getElementById("private-key-file")?.files[0];
+    const encryptedFile = document.getElementById("encrypted-file-input")?.files[0];
+
+    if (!privateKeyFile || !encryptedFile) {
+        alert("Ambos os arquivos são necessários: chave privada e arquivo criptografado.");
         return;
     }
-
-    if (!encryptedFile) {
-        alert("Por favor, selecione o arquivo criptografado.");
-        return;
-    }
-
-    console.log("Arquivo da Chave Privada:", privateKeyFile);
-    console.log("Arquivo Criptografado:", encryptedFile);
 
     const formData = new FormData();
     formData.append("private_key_file", privateKeyFile);
     formData.append("encrypted_file", encryptedFile);
+
+    showDecryptAnimation(true);
+    updateInfoText("Descriptografando... Por favor, aguarde.");
 
     try {
         const response = await fetch("/decrypt_file", {
             method: "POST",
             body: formData,
         });
-        const data = await response.json();
+
+        showDecryptAnimation(false);
 
         if (response.ok) {
-            alert("Descriptografia concluída com sucesso!");
+            const data = await response.json();
+            showDecryptSuccess(true, "Arquivo descriptografado com sucesso!");
+            updateInfoText("Descriptografia concluída com sucesso!");
+            document.getElementById("decrypt-success").innerHTML += `<br><a href="${data.decrypted_file}" class="btn" download>Baixar Arquivo</a>`;
         } else {
-            console.error(data.error);
-            alert(`Erro durante a descriptografia: ${data.error}`);
+            const errorData = await response.json();
+            console.error("Erro do servidor:", errorData.error);
+            alert(`Erro durante a descriptografia: ${errorData.error}`);
+            updateInfoText("Erro durante a descriptografia. Tente novamente.");
         }
     } catch (error) {
-        console.error("Erro ao enviar a requisição:", error);
+        console.error("Erro ao conectar ao servidor:", error);
+        alert("Erro ao conectar ao servidor. Tente novamente.");
+        updateInfoText("Erro ao conectar ao servidor.");
+    } finally {
+        isDecrypting = false;
     }
 };
 
@@ -83,3 +90,29 @@ if (previousButton) {
 } else {
     console.error("Botão Anterior não encontrado.");
 }
+
+// Função para abrir e fechar o modal (se necessário no fluxo)
+const showModal = (message) => {
+    const modal = document.getElementById("modal");
+    const modalMessage = document.getElementById("modal-message");
+
+    if (modal && modalMessage) {
+        modalMessage.textContent = message;
+        modal.style.display = "block";
+
+        const closeModal = document.getElementById("close-modal");
+        if (closeModal) {
+            closeModal.addEventListener("click", () => {
+                modal.style.display = "none";
+            });
+        }
+    }
+};
+
+// Adicionar evento para fechar o modal ao clicar fora dele
+window.onclick = (event) => {
+    const modal = document.getElementById("modal");
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+};

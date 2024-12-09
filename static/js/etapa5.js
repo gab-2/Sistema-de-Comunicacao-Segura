@@ -1,14 +1,10 @@
 // Seletores de Elementos
 const sendPackageButton = document.getElementById("send-package-button");
-const simulationContainer = document.getElementById("simulation-container");
+const statusMessage = document.getElementById("status-message");
+const downloadLinks = document.getElementById("download-links");
+const downloadZipLink = document.getElementById("download-zip");
 const nextButton = document.getElementById("next-button");
 const previousButton = document.getElementById("previous-button");
-const statusMessage = document.getElementById("status-message");
-
-// Verifica se o elemento de status existe
-if (!statusMessage) {
-    console.error("Elemento 'status-message' não encontrado no HTML.");
-}
 
 // Função para atualizar a mensagem de status
 function updateStatusMessage(color, message) {
@@ -17,54 +13,36 @@ function updateStatusMessage(color, message) {
     }
 }
 
-// Botão "Enviar Pacote"
+// Função para exibir o link de download do pacote ZIP
+function showDownloadLink(zipUrl) {
+    if (downloadLinks && downloadZipLink) {
+        downloadZipLink.href = zipUrl; // Atualiza o link do ZIP
+        downloadLinks.style.display = "block"; // Exibe o link de download
+    } else {
+        console.error("Elementos de download não encontrados no HTML.");
+    }
+}
+
+// Evento de clique no botão "Enviar Pacote"
 sendPackageButton.addEventListener("click", async () => {
-    sendPackageButton.disabled = true; // Desativa o botão para evitar múltiplos cliques
+    sendPackageButton.disabled = true;
 
     try {
-        // Atualiza a mensagem de status
         updateStatusMessage("blue", "Enviando pacote...");
 
-        // Simula envio ao servidor
         const formData = new FormData();
 
-        console.log("Iniciando fetch dos arquivos necessários...");
+        // Simula envio de arquivos (fetch para arquivos locais no servidor)
+        const encryptedFile = await fetch("/download/encrypted_file").then(res => res.blob());
+        const signatureFile = await fetch("/download/signed_file").then(res => res.blob());
+        const protectedKeyFile = await fetch("/download/protected_aes_key.pem").then(res => res.blob());
 
-        // Fetch dos arquivos necessários
-        const encryptedFile = await fetch("/download/encrypted_file").then(res => {
-            if (!res.ok) {
-                console.error("Erro ao buscar o arquivo cifrado:", res.status, res.statusText);
-                throw new Error("Arquivo cifrado não encontrado.");
-            }
-            return res.blob();
-        });
+        // Adiciona arquivos ao FormData
+        formData.append("encrypted_file", new File([encryptedFile], "encrypted_file_name"));
+        formData.append("signature_file", new File([signatureFile], "signed_file_name"));
+        formData.append("protected_aes_key", new File([protectedKeyFile], "protected_aes_key.pem"));
 
-        const signatureFile = await fetch("/download/signed_file").then(res => {
-            if (!res.ok) {
-                console.error("Erro ao buscar o arquivo assinado:", res.status, res.statusText);
-                throw new Error("Arquivo assinado não encontrado.");
-            }
-            return res.blob();
-        });
-
-        const protectedKeyFile = await fetch("/download/protected_aes_key.pem").then(res => {
-            if (!res.ok) {
-                console.error("Erro ao buscar a chave AES protegida:", res.status, res.statusText);
-                throw new Error("Chave AES protegida não encontrada.");
-            }
-            return res.blob();
-        });
-
-        console.log("Arquivos baixados com sucesso.");
-
-        // Adiciona os arquivos ao FormData com nomes definidos
-        formData.append("encrypted_file", encryptedFile, "encrypted_file_name");
-        formData.append("signature_file", signatureFile, "signed_file_name");
-        formData.append("protected_aes_key", protectedKeyFile, "protected_aes_key.pem");
-
-        console.log("Enviando os arquivos para o servidor...");
-
-        // Faz a requisição ao servidor
+        // Faz a requisição ao backend para criar o ZIP
         const response = await fetch("/send_package", {
             method: "POST",
             body: formData,
@@ -73,16 +51,16 @@ sendPackageButton.addEventListener("click", async () => {
         const result = await response.json();
 
         if (response.ok) {
-            // Atualiza a mensagem de sucesso
             updateStatusMessage("green", "Pacote enviado com sucesso!");
-            console.log("Resposta do servidor:", result);
+
+            // Mostra o link para baixar o arquivo ZIP
+            showDownloadLink("/download/package_zip");
+
             nextButton.disabled = false; // Habilita o botão "Próximo"
         } else {
-            console.error("Erro do servidor ao enviar o pacote:", result.error);
             throw new Error(result.error || "Erro desconhecido ao enviar o pacote.");
         }
     } catch (error) {
-        console.error("Erro durante o envio do pacote:", error.message);
         updateStatusMessage("red", `Erro: ${error.message}`);
     } finally {
         sendPackageButton.disabled = false;
