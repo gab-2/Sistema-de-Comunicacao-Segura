@@ -438,17 +438,55 @@ def decrypt_file():
             if not signature_file:
                 return jsonify({"error": "Arquivo de assinatura não encontrado no pacote."}), 400
 
-            # Continue com o processamento usando os arquivos identificados
-            # Exemplo: descriptografar, verificar assinatura, etc.
-            # ...
+            # Descriptografar a chave AES usando a chave privada
+            with open(protected_key_file, 'rb') as pk_file, open(private_key_path, 'rb') as private_key:
+                protected_aes_key = pk_file.read()
+                private_key_data = serialization.load_pem_private_key(private_key.read(), password=None)
 
-            return jsonify({"message": "Arquivos processados com sucesso!"}), 200
+                aes_key = private_key_data.decrypt(
+                    protected_aes_key,
+                    padding.OAEP(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        algorithm=hashes.SHA256(),
+                        label=None
+                    )
+                )
+
+            # Descriptografar o arquivo de dados
+            decrypted_file_path = os.path.join("generated_files", "decrypted_file.pdf")
+            with open(encrypted_data_file, 'rb') as enc_file, open(decrypted_file_path, 'wb') as dec_file:
+                encrypted_data = enc_file.read()
+                cipher = Cipher(algorithms.AES(aes_key), modes.CFB8(b'12345678'))
+                decryptor = cipher.decryptor()
+                decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
+                dec_file.write(decrypted_data)
+
+            # Verificar a assinatura
+            with open(signature_file, 'rb') as sig_file, open(decrypted_file_path, 'rb') as dec_file:
+                signature = sig_file.read()
+                data = dec_file.read()
+                public_key = private_key_data.public_key()
+                try:
+                    public_key.verify(
+                        signature,
+                        data,
+                        padding.PSS(
+                            mgf=padding.MGF1(hashes.SHA256()),
+                            salt_length=padding.PSS.MAX_LENGTH
+                        ),
+                        hashes.SHA256()
+                    )
+                except Exception as e:
+                    return jsonify({"error": f"Erro na verificação da assinatura: {str(e)}"}), 400
+
+            return jsonify({"decrypted_file": decrypted_file_path}), 200
         else:
             return jsonify({"error": "O arquivo enviado não é um pacote ZIP válido."}), 400
 
     except Exception as e:
         logging.error(f"Erro durante a descriptografia: {e}")
         return jsonify({"error": "Erro interno no servidor. Verifique os logs para mais detalhes."}), 500
+
 
 
 # Upload de arquivos
