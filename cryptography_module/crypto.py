@@ -152,30 +152,54 @@ def verify_signature(file_path, signature_path, public_key_path):
     except Exception as e:
         logging.error(f"Erro ao verificar a assinatura: {e}")
         return False
-
-
-def decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path):
-    """
-    Descriptografa um arquivo cifrado usando a chave privada RSA.
-
-    :param encrypted_file_path: Caminho do arquivo cifrado.
-    :param private_key_path: Caminho da chave privada RSA para descriptografar o arquivo.
-    :param decrypted_file_path: Caminho para salvar o arquivo descriptografado.
-    """
+def decrypt_file(encrypted_file_path, private_key_content, decrypted_file_path):
     logging.debug(f"Descriptografando o arquivo: {encrypted_file_path}")
 
-    # Lê o arquivo cifrado
-    with open(encrypted_file_path, "rb") as f:
-        encrypted_data = f.read()
-
-    # Lê a chave privada
-    with open(private_key_path, "rb") as key_file:
+    try:
+        # Carregar a chave privada
         private_key = serialization.load_pem_private_key(
-            key_file.read(),
-            password=None
+            private_key_content,
+            password=None,
         )
+        logging.debug("Chave privada carregada com sucesso.")
+    except Exception as e:
+        logging.error(f"Erro ao carregar a chave privada: {e}")
+        raise ValueError(f"Erro ao carregar a chave privada: {e}")
 
-    # Descriptografa a chave AES usando a chave privada RSA
+    try:
+        with open(encrypted_file_path, "rb") as ef:
+            encrypted_data = ef.read()
+
+        # Descriptografar a chave AES
+        decrypted_aes_key = private_key.decrypt(
+            encrypted_data[:256],  # Assume-se que os primeiros 256 bytes são a chave AES criptografada
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None,
+            )
+        )
+        logging.debug(f"Chave AES descriptografada: {decrypted_aes_key.hex()}")
+
+        # Continuar com o processo de descriptografia
+        iv = encrypted_data[256:272]
+        cipher_data = encrypted_data[272:]
+
+        cipher = Cipher(algorithms.AES(decrypted_aes_key), modes.CFB(iv))
+        decryptor = cipher.decryptor()
+        decrypted_data = decryptor.update(cipher_data) + decryptor.finalize()
+
+        # Salvar o arquivo descriptografado
+        with open(decrypted_file_path, "wb") as df:
+            df.write(decrypted_data)
+
+        logging.debug(f"Arquivo descriptografado salvo em: {decrypted_file_path}")
+    except Exception as e:
+        logging.error(f"Erro durante o processo de descriptografia: {e}")
+        raise ValueError(f"Erro durante o processo de descriptografia: {e}")
+
+
+    # Descriptografar a chave AES com a chave privada RSA
     try:
         decrypted_aes_key = private_key.decrypt(
             encrypted_data[:256],
@@ -185,21 +209,33 @@ def decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path):
                 label=None
             )
         )
+        logging.debug(f"Chave AES descriptografada: {decrypted_aes_key.hex()}")
     except Exception as e:
         logging.error(f"Erro ao descriptografar a chave AES: {e}")
         raise ValueError(f"Erro ao descriptografar a chave AES: {e}")
 
-    # Extraímos o IV e os dados cifrados
+
+    # Extrair IV e dados cifrados
     iv = encrypted_data[256:272]
     cipher_data = encrypted_data[272:]
 
-    # Descriptografa os dados do arquivo usando o AES
-    cipher = Cipher(algorithms.AES(decrypted_aes_key), modes.CFB(iv))
-    decryptor = cipher.decryptor()
-    decrypted_data = decryptor.update(cipher_data) + decryptor.finalize()
+    logging.debug(f"IV extraído: {iv.hex()}")
+    logging.debug(f"Dados criptografados (primeiros 64 bytes): {cipher_data[:64].hex()}")
 
-    # Salva o arquivo descriptografado
-    with open(decrypted_file_path, "wb") as f:
-        f.write(decrypted_data)
+    # Descriptografar os dados do arquivo usando o AES
+    try:
+        cipher = Cipher(algorithms.AES(decrypted_aes_key), modes.CFB(iv))
+        decryptor = cipher.decryptor()
+        decrypted_data = decryptor.update(cipher_data) + decryptor.finalize()
+    except Exception as e:
+        logging.error(f"Erro durante a descriptografia do conteúdo do arquivo: {e}")
+        raise ValueError(f"Erro durante a descriptografia do conteúdo do arquivo: {e}")
 
-    logging.debug(f"Arquivo descriptografado salvo em: {decrypted_file_path}")
+    # Salvar o arquivo descriptografado
+    try:
+        with open(decrypted_file_path, "wb") as f:
+            f.write(decrypted_data)
+        logging.debug(f"Arquivo descriptografado salvo em: {decrypted_file_path}")
+    except Exception as e:
+        logging.error(f"Erro ao salvar o arquivo descriptografado: {e}")
+        raise ValueError(f"Erro ao salvar o arquivo descriptografado: {e}")

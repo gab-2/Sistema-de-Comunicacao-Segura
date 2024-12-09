@@ -28,16 +28,11 @@ const updateInfoText = (text) => {
 
 // Função para realizar a descriptografia
 const startDecrypt = async () => {
-    if (isDecrypting) return;
-
-    // Obter os dados necessários
-    const privateKey = document.getElementById("private-key")?.value?.trim(); // Campo de chave privada
+    const privateKeyFile = document.getElementById("private-key-file-input")?.files[0]; // Arquivo da chave privada
     const encryptedFile = document.getElementById("encrypted-file-input")?.files[0]; // Arquivo criptografado
-    const signatureFile = document.getElementById("signature-file-input")?.files[0]; // Arquivo de assinatura
 
-    // Verificar se todos os dados foram preenchidos
-    if (!privateKey) {
-        alert("Por favor, insira a chave privada.");
+    if (!privateKeyFile) {
+        alert("Por favor, selecione o arquivo da chave privada.");
         return;
     }
 
@@ -46,54 +41,28 @@ const startDecrypt = async () => {
         return;
     }
 
-    if (!signatureFile) {
-        alert("Por favor, selecione o arquivo de assinatura.");
-        return;
-    }
-
-    console.log("Iniciando descriptografia com os seguintes dados:");
-    console.log("Chave Privada:", privateKey);
+    console.log("Arquivo da Chave Privada:", privateKeyFile);
     console.log("Arquivo Criptografado:", encryptedFile);
-    console.log("Arquivo de Assinatura:", signatureFile);
 
-    // Iniciar a animação
-    isDecrypting = true;
-    showDecryptAnimation(true);
-    updateInfoText("Descriptografando... Por favor, aguarde.");
-
-    // Criar o FormData para envio ao backend
     const formData = new FormData();
-    formData.append("private_key_file", new Blob([privateKey], { type: "text/plain" }));
+    formData.append("private_key_file", privateKeyFile);
     formData.append("encrypted_file", encryptedFile);
-    formData.append("signature_file", signatureFile);
 
     try {
-        // Fazer a requisição para o backend
         const response = await fetch("/decrypt_file", {
             method: "POST",
             body: formData,
         });
-
         const data = await response.json();
 
-        // Parar a animação
-        showDecryptAnimation(false);
-
         if (response.ok) {
-            // Exibir mensagem de sucesso
-            showDecryptSuccess(true, "Arquivo descriptografado com sucesso!");
-            updateInfoText("Descriptografia concluída com sucesso!");
+            alert("Descriptografia concluída com sucesso!");
         } else {
-            // Exibir mensagem de erro
-            alert(`Erro: ${data.error}`);
-            updateInfoText("Erro durante a descriptografia.");
+            console.error(data.error);
+            alert(`Erro durante a descriptografia: ${data.error}`);
         }
     } catch (error) {
-        console.error("Erro durante a descriptografia:", error);
-        alert("Erro ao conectar ao servidor. Tente novamente.");
-        updateInfoText("Erro ao conectar ao servidor.");
-    } finally {
-        isDecrypting = false;
+        console.error("Erro ao enviar a requisição:", error);
     }
 };
 

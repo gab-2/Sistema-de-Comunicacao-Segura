@@ -29,23 +29,19 @@
 
             <!-- Texto informativo -->
             <p id="info-text" class="info-text">
-                Para iniciar o processo de descriptografia, insira sua chave privada e selecione os arquivos necessários
-                (arquivo criptografado e arquivo de assinatura). Em seguida, clique no botão "Iniciar Descriptografia".
+                Para iniciar o processo de descriptografia, insira sua chave privada e selecione o arquivo criptografado. Em seguida, clique no botão "Iniciar Descriptografia".
             </p>
 
             <!-- Entrada da Chave Privada -->
             <div id="key-container" class="key-container">
-                <label for="private-key">Chave Privada:</label>
-                <input id="private-key" type="text" placeholder="Digite sua chave privada">
+                <label for="private-key-file">Arquivo da Chave Privada:</label>
+                <input id="private-key-file" type="file" accept=".pem">
             </div>
 
             <!-- Upload de Arquivos -->
             <div id="file-upload-container" class="file-upload-container">
                 <label for="encrypted-file-input">Arquivo Criptografado:</label>
                 <input id="encrypted-file-input" type="file" accept=".txt,.enc">
-
-                <label for="signature-file-input">Arquivo de Assinatura:</label>
-                <input id="signature-file-input" type="file" accept=".sig,.txt">
             </div>
 
             <!-- Botão de Iniciar Descriptografia -->

@@ -11,7 +11,10 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 # Configuração de logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+UPLOAD_DIR = "uploaded_files"
+GENERATED_DIR = "generated_files"
 app = Flask(__name__)
+
 app.secret_key = 'sua_chave_secreta_para_sessao'  # Adicione esta linha
 
 # Pastas para salvar os arquivos gerados e enviados
@@ -453,41 +456,31 @@ def protect_aes_key_route():
 # Endpoint para descriptografar um arquivo
 @app.route("/decrypt_file", methods=["POST"])
 def decrypt_file_route():
-    encrypted_file = request.files.get("encrypted_file")
-    signature_file = request.files.get("signature_file")
-    private_key_file = request.files.get("private_key_file")
+    private_key_file = request.files.get("private_key_file")  # Chave privada como arquivo
+    encrypted_file = request.files.get("encrypted_file")      # Arquivo criptografado
 
-    # Verifica se todos os arquivos necessários foram enviados
-    if not all([encrypted_file, signature_file, private_key_file]):
-        return jsonify({"error": "Todos os arquivos (arquivo criptografado, assinatura e chave privada) são necessários."}), 400
+    if not private_key_file or not encrypted_file:
+        logging.error("Arquivos ausentes: chave privada ou arquivo criptografado.")
+        return jsonify({"error": "Os arquivos da chave privada e o arquivo criptografado são obrigatórios."}), 400
 
-    # Salvar os arquivos enviados
-    encrypted_file_path, error = save_uploaded_file(encrypted_file, UPLOAD_DIR, encrypted_file.filename)
-    if error:
-        return jsonify({"error": error}), 400
+    logging.debug(f"Arquivo da chave privada: {private_key_file.filename}")
+    logging.debug(f"Arquivo criptografado: {encrypted_file.filename}")
 
-    signature_file_path, error = save_uploaded_file(signature_file, UPLOAD_DIR, signature_file.filename)
-    if error:
-        return jsonify({"error": error}), 400
+    # Salvar os arquivos no servidor para processamento
+    private_key_path, error1 = save_uploaded_file(private_key_file, UPLOAD_DIR, private_key_file.filename)
+    encrypted_file_path, error2 = save_uploaded_file(encrypted_file, UPLOAD_DIR, encrypted_file.filename)
 
-    private_key_path, error = save_uploaded_file(private_key_file, UPLOAD_DIR, private_key_file.filename)
-    if error:
-        return jsonify({"error": error}), 400
+    if error1 or error2:
+        logging.error(f"Erro ao salvar arquivos: {error1 or error2}")
+        return jsonify({"error": error1 or error2}), 500
 
-    # Verificar assinatura do arquivo
-    public_key_path = os.path.join(SAVE_DIR, "public_key.pem")
-    if not os.path.exists(public_key_path):
-        logging.error(f"Chave pública não encontrada no caminho: {public_key_path}")
-        return jsonify({"error": "Chave pública não encontrada para validar a assinatura."}), 400
-
-    is_signature_valid = verify_signature(encrypted_file_path, signature_file_path, public_key_path)
-    if not is_signature_valid:
-        return jsonify({"error": "A assinatura é inválida."}), 400
-
-    # Descriptografar o arquivo
     decrypted_file_path = os.path.join(SAVE_DIR, f"decrypted_{encrypted_file.filename}")
+
     try:
-        decrypt_file(encrypted_file_path, private_key_path, decrypted_file_path)
+        with open(private_key_path, "rb") as pk_file:
+            private_key_content = pk_file.read()
+
+        decrypt_file(encrypted_file_path, private_key_content, decrypted_file_path)
     except Exception as e:
         logging.error(f"Erro durante a descriptografia: {e}")
         return jsonify({"error": f"Erro durante a descriptografia: {e}"}), 500
