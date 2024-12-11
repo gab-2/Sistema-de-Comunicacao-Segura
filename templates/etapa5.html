@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Empacotamento e Envio</title>
-    <link rel="stylesheet" href="/static/css/etapa5.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Etapa 5: Empacotamento e Envio</title>
+    <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+            <h2>Etapas</h2>
             <ul id="sidebar-steps">
                 <li class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
                 <li class="completed"><span class="step-circle">2</span> Preparação</li>
@@ -21,65 +22,66 @@
             </ul>
         </nav>
 
-        <!-- Conteúdo Central -->
         <main class="content">
-            <h1>Empacotamento e Envio</h1>
-            <p class="description">Nesta etapa, todos os elementos processados são combinados em um único pacote seguro para envio. O pacote contém: o arquivo cifrado, a assinatura digital e a chave simétrica protegida.</p>
+            <h1>Etapa 5: Empacotamento e Envio</h1>
+            <p class="description">
+                Agora todos os elementos (arquivo cifrado, assinatura e chave AES protegida) serão combinados em um pacote ZIP para envio ao professor.
+            </p>
 
-            <!-- Componentes do Pacote -->
             <div class="process-steps">
                 <h2>Componentes do pacote:</h2>
                 <ul>
-                    <li>Arquivo cifrado com chave simétrica</li>
-                    <li>Assinatura digital do arquivo original</li>
-                    <li>Chave simétrica cifrada com RSA</li>
+                    <li>Arquivo cifrado</li>
+                    <li>Assinatura digital</li>
+                    <li>Chave simétrica protegida</li>
                 </ul>
                 <button id="send-package-button" class="btn primary">Enviar Pacote</button>
             </div>
 
-            <!-- Mensagem de Status -->
             <div id="status-message" class="status-message"></div>
 
-            <!-- Links de Download -->
-            <div id="download-links" style="display: none;">
+            <div id="download-links">
                 <h2>Download do Pacote:</h2>
                 <ul>
-                    <li><a id="download-zip" href="/download/package_zip" download>Baixar Pacote ZIP</a></li>
+                    <li><a id="download-zip" class="download" href="/download/package_zip" download>Baixar Pacote ZIP</a></li>
                 </ul>
             </div>
 
-            <!-- Simulação do Envio -->
-            <div id="simulation-container" class="simulation-container" style="display: none;">
-                <div class="user-card">
-                    <i class="fas fa-user"></i>
-                    <p>Aluno<br><strong>Remetente</strong></p>
-                </div>
-                <div class="package-icon">
-                    <i class="fas fa-box"></i>
-                </div>
-                <div class="user-card">
-                    <i class="fas fa-user-tie"></i>
-                    <p>Professor<br><strong>Destinatário</strong></p>
-                </div>
-            </div>
-
-            <!-- Explicação -->
             <div class="info-box">
-                <h2><i class="fas fa-info-circle"></i> O pacote é enviado de forma segura, garantindo:</h2>
+                <h2><i class="fas fa-info-circle"></i> Segurança Garantida</h2>
                 <ul>
-                    <li>Confidencialidade (através da cifragem)</li>
-                    <li>Autenticidade (através da assinatura digital)</li>
-                    <li>Integridade (através do hash)</li>
+                    <li>Confidencialidade via cifragem</li>
+                    <li>Autenticidade via assinatura</li>
+                    <li>Integridade via hash</li>
                 </ul>
             </div>
 
-            <!-- Botões de Navegação -->
             <div class="navigation-buttons">
                 <button id="previous-button" class="btn secondary"><i class="fas fa-arrow-left"></i> Anterior</button>
                 <button id="next-button" class="btn primary" disabled>Próximo <i class="fas fa-arrow-right"></i></button>
             </div>
         </main>
     </div>
+
+    <script>
+        // Lógica para exibir o nome do arquivo selecionado no input personalizado da Etapa 5
+        const reuploadEncryptedFileInput = document.getElementById('reupload-encrypted-file');
+        const reuploadEncryptedFileFilename = document.getElementById('reupload-encrypted-file-filename');
+        const reuploadEncryptedFileBtn = document.getElementById('reupload-encrypted-file-btn');
+
+        reuploadEncryptedFileBtn.addEventListener('click', () => {
+            reuploadEncryptedFileInput.click();
+        });
+
+        reuploadEncryptedFileInput.addEventListener('change', () => {
+            const file = reuploadEncryptedFileInput.files[0];
+            if (file) {
+                reuploadEncryptedFileFilename.textContent = file.name;
+            } else {
+                reuploadEncryptedFileFilename.textContent = '';
+            }
+        });
+    </script>
 
     <script src="/static/js/etapa5.js"></script>
 </body>

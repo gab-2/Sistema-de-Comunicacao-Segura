@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preparação do Ambiente</title>
-    <link rel="stylesheet" href="/static/css/etapa2.css">
-    <!-- Biblioteca de ícones -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Etapa 2: Preparação do Ambiente</title>
+    <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <!-- Menu Lateral -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+            <h2>Etapas</h2>
             <ul id="sidebar-steps">
                 <li data-step="1" class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
                 <li data-step="2" class="active"><span class="step-circle">2</span> Preparação</li>
@@ -22,23 +22,32 @@
             </ul>
         </nav>
 
-        <!-- Conteúdo Central -->
         <main class="content">
-            <h1>Preparação do Ambiente</h1>
+            <h1>Etapa 2: Preparação do Ambiente</h1>
+            <p class="description">Agora você irá importar a chave pública do professor e selecionar o arquivo que deseja enviar, garantindo assim a preparação para a assinatura e cifragem.</p>
 
-            <!-- Importar Chave Pública -->
-            <div class="form-group">
+            <div class="custom-file-container">
                 <label for="public-key-upload">Importar Chave Pública do Professor:</label>
-                <input id="public-key-upload" type="file" accept=".pem">
+                <div class="custom-file-wrapper">
+                    <input id="public-key-upload" class="custom-file-input" type="file" accept=".pem">
+                    <button class="custom-file-button" id="public-key-btn">
+                        <i class="fas fa-upload"></i> Selecionar Arquivo
+                    </button>
+                    <span id="public-key-filename" class="file-selected-text"></span>
+                </div>
             </div>
 
-            <!-- Selecionar Arquivo -->
-            <div class="form-group">
+            <div class="custom-file-container">
                 <label for="file-upload">Selecionar Arquivo para Envio:</label>
-                <input id="file-upload" type="file">
+                <div class="custom-file-wrapper">
+                    <input id="file-upload" class="custom-file-input" type="file">
+                    <button class="custom-file-button" id="file-btn">
+                        <i class="fas fa-upload"></i> Selecionar Arquivo
+                    </button>
+                    <span id="file-filename" class="file-selected-text"></span>
+                </div>
             </div>
 
-            <!-- Informações do Arquivo -->
             <div id="file-info" class="file-info" style="display: none;">
                 <h3>Informações do Arquivo:</h3>
                 <p><strong>Nome:</strong> <span id="file-name"></span></p>
@@ -46,13 +55,48 @@
                 <p><strong>Hash SHA-256:</strong> <span id="file-hash"></span></p>
             </div>
 
-            <!-- Botões de Navegação -->
-            <div class="buttons">
+            <div class="navigation-buttons">
                 <button id="previous-button" class="btn secondary"><i class="fas fa-arrow-left"></i> Anterior</button>
                 <button id="next-button" class="btn primary" disabled>Próximo <i class="fas fa-arrow-right"></i></button>
             </div>
         </main>
     </div>
+    <script>
+        // Lógica para mostrar o nome do arquivo selecionado nos inputs personalizados
+        const publicKeyInput = document.getElementById('public-key-upload');
+        const publicKeyFilename = document.getElementById('public-key-filename');
+        const publicKeyBtn = document.getElementById('public-key-btn');
+
+        publicKeyBtn.addEventListener('click', () => {
+            publicKeyInput.click();
+        });
+
+        publicKeyInput.addEventListener('change', () => {
+            const file = publicKeyInput.files[0];
+            if (file) {
+                publicKeyFilename.textContent = file.name;
+            } else {
+                publicKeyFilename.textContent = '';
+            }
+        });
+
+        const fileInput = document.getElementById('file-upload');
+        const fileFilename = document.getElementById('file-filename');
+        const fileBtn = document.getElementById('file-btn');
+
+        fileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) {
+                fileFilename.textContent = file.name;
+            } else {
+                fileFilename.textContent = '';
+            }
+        });
+    </script>
     <script src="/static/js/etapa2.js"></script>
 </body>
 </html>

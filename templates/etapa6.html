@@ -1,88 +1,116 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descriptografia</title>
-    <link rel="stylesheet" href="/static/css/etapa6.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Etapa 6: Descriptografia</title>
+    <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+            <h2>Etapas</h2>
             <ul id="sidebar-steps">
-                <li data-step="1" class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
-                <li data-step="2" class="completed"><span class="step-circle">2</span> Preparação</li>
-                <li data-step="3" class="completed"><span class="step-circle">3</span> Assinatura</li>
-                <li data-step="4" class="completed"><span class="step-circle">4</span> Proteção</li>
-                <li data-step="5" class="completed"><span class="step-circle">5</span> Envio</li>
-                <li data-step="6" class="active"><span class="step-circle">6</span> Descriptografia</li>
+                <li class="completed"><span class="step-circle">1</span> Geração de Chaves</li>
+                <li class="completed"><span class="step-circle">2</span> Preparação</li>
+                <li class="completed"><span class="step-circle">3</span> Assinatura</li>
+                <li class="completed"><span class="step-circle">4</span> Proteção</li>
+                <li class="completed"><span class="step-circle">5</span> Envio</li>
+                <li class="active"><span class="step-circle">6</span> Descriptografia</li>
             </ul>
         </nav>
 
-        <!-- Conteúdo Principal -->
         <main class="content">
-            <h1>Descriptografia</h1>
-
-            <!-- Texto informativo -->
+            <h1>Etapa 6: Descriptografia</h1>
             <p id="info-text" class="info-text">
-                Para iniciar o processo de descriptografia, insira sua chave privada e selecione o arquivo criptografado. Em seguida, clique no botão "Iniciar Descriptografia".
+                Nesta etapa, o professor utilizará sua chave privada para descriptografar o pacote recebido, obtendo assim o arquivo original.
             </p>
 
-            <!-- Entrada da Chave Privada -->
-            <div id="key-container" class="key-container">
-                <label for="private-key-file">Arquivo da Chave Privada:</label>
-                <input id="private-key-file" type="file" accept=".pem">
-            </div>
-            
-            <!-- Upload de Arquivos -->
-            <div id="file-upload-container" class="file-upload-container">
-                <label for="encrypted-file-input">Arquivo Criptografado:</label>
-                <input id="encrypted-file-input" type="file" accept=".enc,.txt,.pdf,.zip">
+            <!-- Input customizado para Chave Privada -->
+            <div class="custom-file-container">
+                <label for="private-key-file">Selecione sua Chave Privada:</label>
+                <div class="custom-file-wrapper">
+                    <input id="private-key-file" class="custom-file-input" type="file" accept=".pem">
+                    <button class="custom-file-button" id="private-key-btn">
+                        <i class="fas fa-upload"></i> Selecionar Arquivo
+                    </button>
+                    <span id="private-key-filename" class="file-selected-text"></span>
+                </div>
             </div>
 
-            <!-- Botão de Iniciar Descriptografia -->
+            <!-- Input customizado para Arquivo Criptografado -->
+            <div class="custom-file-container">
+                <label for="encrypted-file-input">Selecione o Arquivo Criptografado:</label>
+                <div class="custom-file-wrapper">
+                    <input id="encrypted-file-input" class="custom-file-input" type="file" accept=".enc,.txt,.pdf,.zip">
+                    <button class="custom-file-button" id="encrypted-file-btn">
+                        <i class="fas fa-upload"></i> Selecionar Arquivo
+                    </button>
+                    <span id="encrypted-file-filename" class="file-selected-text"></span>
+                </div>
+            </div>
+
             <button class="btn primary" id="decrypt-button">
                 <i class="fas fa-unlock"></i> Iniciar Descriptografia
             </button>
 
-            <!-- Animação de Descriptografia -->
-            <div id="decrypt-animation" class="decrypt-animation" style="display: none;">
-                <p>Processando... Descriptografando o arquivo</p>
+            <div id="decrypt-animation" class="decrypt-animation">
+                <p>Descriptografando o arquivo...</p>
                 <div class="loader"></div>
             </div>
 
-            <!-- Mensagem de Sucesso -->
             <div id="decrypt-success" class="card success" style="display: none;">
                 <i class="fas fa-check-circle"></i> Arquivo Descriptografado com Sucesso!
-                <!-- Espaço para o link de download -->
-                <div id="download-container" class="download-container" style="margin-top: 15px;">
-                    <!-- O link será adicionado dinamicamente pelo JS -->
-                </div>
             </div>
 
-            <!-- Divisor -->
             <hr class="divider">
 
-            <!-- Botão Anterior -->
             <button id="previous-button" class="btn next">
                 ← Anterior
             </button>
         </main>
     </div>
 
-    <!-- Modal -->
-    <div id="modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span id="close-modal" class="close">&times;</span>
-            <p id="modal-message"></p>
-        </div>
-    </div>
+    <script>
+        // Lógica para exibir o nome do arquivo selecionado para a chave privada
+        const privateKeyInput = document.getElementById('private-key-file');
+        const privateKeyFilename = document.getElementById('private-key-filename');
+        const privateKeyBtn = document.getElementById('private-key-btn');
+
+        privateKeyBtn.addEventListener('click', () => {
+            privateKeyInput.click();
+        });
+
+        privateKeyInput.addEventListener('change', () => {
+            const file = privateKeyInput.files[0];
+            if (file) {
+                privateKeyFilename.textContent = file.name;
+            } else {
+                privateKeyFilename.textContent = '';
+            }
+        });
+
+        // Lógica para exibir o nome do arquivo selecionado para o arquivo criptografado
+        const encryptedFileInput = document.getElementById('encrypted-file-input');
+        const encryptedFileFilename = document.getElementById('encrypted-file-filename');
+        const encryptedFileBtn = document.getElementById('encrypted-file-btn');
+
+        encryptedFileBtn.addEventListener('click', () => {
+            encryptedFileInput.click();
+        });
+
+        encryptedFileInput.addEventListener('change', () => {
+            const file = encryptedFileInput.files[0];
+            if (file) {
+                encryptedFileFilename.textContent = file.name;
+            } else {
+                encryptedFileFilename.textContent = '';
+            }
+        });
+    </script>
 
     <script src="/static/js/etapa6.js"></script>
 </body>
-
 </html>

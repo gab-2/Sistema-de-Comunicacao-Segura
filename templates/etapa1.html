@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Comunicação Segura</title>
-    <link rel="stylesheet" href="/static/css/etapa1.css">
-    <!-- Biblioteca de ícones -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sistema de Comunicação Segura - Etapa 1</title>
+    <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+            <h2>Etapas</h2>
             <ul id="sidebar-steps">
                 <li data-step="1" class="active"><span class="step-circle">1</span> Geração de Chaves</li>
                 <li data-step="2"><span class="step-circle">2</span> Preparação</li>
@@ -24,70 +23,115 @@
             </ul>
         </nav>
 
-
-        <!-- Conteúdo Central -->
+        <!-- Conteúdo -->
         <main class="content">
-            <h1>Geração de Chaves</h1>
+            <h1>Etapa 1: Geração de Chaves</h1>
+            <p class="description">
+                Bem-vindo! Vamos iniciar o processo de comunicação segura. Nesta etapa, você gerará um par de chaves RSA (pública e privada) e uma chave simétrica AES.  
+                A chave pública RSA será compartilhada com o destinatário, enquanto a chave privada RSA e a chave AES permanecerão protegidas localmente.
+            </p>
 
-            <!-- Botão RSA -->
-            <div class="buttons">
+            <div class="buttons" style="margin-bottom: 20px;">
                 <button id="generate-rsa" class="btn primary">
                     <i class="fas fa-key"></i> Gerar Par de Chaves RSA
                 </button>
             </div>
-            <!-- Mensagem de Sucesso RSA -->
+            
             <div id="rsa-success" class="card success" style="display: none;">
                 <i class="fas fa-check-circle"></i> Chaves RSA geradas com sucesso!
             </div>
-            <!-- Saída RSA -->
-            <div id="rsa-output" style="display: none;">
-                <div class="key-container">
+            
+            <div id="rsa-output" style="display: none; margin-bottom: 20px;">
+                <div style="margin-bottom: 15px;">
                     <label for="public-key">Chave Pública:</label>
-                    <input id="public-key" type="text" readonly>
-                    <button class="download-btn" id="download-public">
-                        <i class="fas fa-download"></i> Baixar
-                    </button>
+                    <textarea id="public-key" class="key-display" readonly></textarea>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="download-btn" id="download-public">
+                            <i class="fas fa-download"></i> Baixar
+                        </button>
+                        <button class="copy-btn" id="copy-public">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
                 </div>
-                <div class="key-container">
+                <div style="margin-bottom: 15px;">
                     <label for="private-key">Chave Privada:</label>
-                    <input id="private-key" type="text" readonly>
-                    <button class="download-btn" id="download-private">
-                        <i class="fas fa-download"></i> Baixar
-                    </button>
+                    <textarea id="private-key" class="key-display" readonly></textarea>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="download-btn" id="download-private">
+                            <i class="fas fa-download"></i> Baixar
+                        </button>
+                        <button class="copy-btn" id="copy-private">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Botão AES -->
-            <div class="buttons">
+            <div class="buttons" style="margin-bottom: 20px;">
                 <button id="generate-aes" class="btn secondary">
-                    <i class="fas fa-lock"></i> Gerar Chave Simétrica AES
+                    <i class="fas fa-lock"></i> Gerar Chave AES
                 </button>
             </div>
-            <!-- Mensagem de Sucesso AES -->
+            
             <div id="aes-success" class="card success" style="display: none;">
                 <i class="fas fa-check-circle"></i> Chave AES gerada com sucesso!
             </div>
-            <!-- Saída AES -->
+            
             <div id="aes-output" style="display: none;">
-                <div class="key-container">
-                    <label for="aes-key">Chave AES:</label>
-                    <input id="aes-key" type="text" readonly>
+                <label for="aes-key">Chave AES:</label>
+                <textarea id="aes-key" class="key-display" readonly></textarea>
+                <div style="display: flex; gap: 10px;">
                     <button class="download-btn" id="download-aes">
                         <i class="fas fa-download"></i> Baixar
+                    </button>
+                    <button class="copy-btn" id="copy-aes">
+                        <i class="fas fa-copy"></i> Copiar
                     </button>
                 </div>
             </div>
 
-            <!-- Divisor -->
             <hr class="divider">
 
-            <!-- Botão Próximo -->
-            <button id="next-button" class="btn next" disabled>
+            <p style="margin-bottom: 20px; font-size: 14px; color: #555;">
+                Após gerar as chaves, clique em "Próximo" para continuar o processo.
+            </p>
+            <button id="next-button" class="btn primary" disabled>
                 Próximo →
             </button>
         </main>
     </div>
+    <script>
+        // Lógica JS adicional para copiar as chaves
+
+        // Função para copiar texto da textarea
+        function copyToClipboard(elementId) {
+            const textarea = document.getElementById(elementId);
+            if (textarea) {
+                navigator.clipboard.writeText(textarea.value).then(() => {
+                    alert("Texto copiado para a área de transferência!");
+                }, () => {
+                    alert("Não foi possível copiar o texto.");
+                });
+            }
+        }
+
+        // Event listeners para os botões de copiar
+        const copyPublicBtn = document.getElementById("copy-public");
+        if (copyPublicBtn) {
+            copyPublicBtn.addEventListener("click", () => copyToClipboard("public-key"));
+        }
+
+        const copyPrivateBtn = document.getElementById("copy-private");
+        if (copyPrivateBtn) {
+            copyPrivateBtn.addEventListener("click", () => copyToClipboard("private-key"));
+        }
+
+        const copyAesBtn = document.getElementById("copy-aes");
+        if (copyAesBtn) {
+            copyAesBtn.addEventListener("click", () => copyToClipboard("aes-key"));
+        }
+    </script>
     <script src="/static/js/etapa1.js"></script>
 </body>
-
 </html>
